@@ -1,0 +1,427 @@
+/* === CR7的小世界 — 设计系统 ===
+   配色灵感：葡萄牙的海天（淡蓝）、马德拉岛阳光（暖金）、球场（深绿点缀）
+   避免AI味：不用奶油底+赤陶色，不用全大写眉标，不用统一圆角卡片阴影
+*/
+
+:root {
+  --white: #FAFBFC;
+  --cloud: #EEF2F7;
+  --sea: #6BA3BE;
+  --sea-light: #D6E8F0;
+  --sun: #D4A847;
+  --sun-light: #F5ECD7;
+  --dark: #1E2A38;
+  --text: #2C3E50;
+  --text-light: #6B7D8D;
+  --green: #4A7C59;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text);
+  background: var(--white);
+  line-height: 1.7;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === 导航 === */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(250, 251, 252, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(107, 163, 190, 0.15);
+}
+
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--dark);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 6px;
+}
+
+.nav-links a {
+  display: block;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-light);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--sea);
+  background: var(--sea-light);
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--dark);
+  border-radius: 2px;
+}
+
+/* === Hero === */
+.hero {
+  padding: 140px 24px 100px;
+  text-align: center;
+  background: linear-gradient(170deg, var(--sea-light) 0%, var(--white) 50%, var(--sun-light) 100%);
+}
+
+.hero-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.hero-sub {
+  font-size: 0.9rem;
+  color: var(--sea);
+  font-weight: 500;
+  margin-bottom: 16px;
+  letter-spacing: 0.08em;
+}
+
+.hero-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  font-weight: 600;
+  color: var(--dark);
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  color: var(--text-light);
+  line-height: 1.8;
+  margin-bottom: 36px;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 12px 32px;
+  background: var(--sea);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: background 0.2s, transform 0.15s;
+}
+
+.hero-btn:hover {
+  background: #5A8FA8;
+  transform: translateY(-1px);
+}
+
+/* === 通用板块 === */
+.section {
+  padding: 80px 24px;
+}
+
+.section-alt {
+  background: var(--cloud);
+}
+
+.section-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.section-icon {
+  display: block;
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  font-family: 'Lora', serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+
+.section-desc {
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+.section-notice {
+  font-size: 0.82rem;
+  color: var(--sun);
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* === 查看更多 === */
+.section-more {
+  text-align: center;
+  margin-top: 28px;
+}
+
+.more-link {
+  display: inline-block;
+  padding: 8px 24px;
+  font-size: 0.88rem;
+  color: var(--sea);
+  text-decoration: none;
+  border: 1px solid var(--sea-light);
+  border-radius: var(--radius-md);
+  transition: background 0.2s, color 0.2s;
+}
+
+.more-link:hover {
+  background: var(--sea);
+  color: #fff;
+}
+
+/* === 时间线预览 === */
+.timeline-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.timeline-era {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid var(--sea-light);
+  border-radius: var(--radius-md);
+  min-width: 140px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.timeline-era:hover {
+  border-color: var(--sea);
+  box-shadow: 0 4px 16px rgba(107, 163, 190, 0.15);
+}
+
+.era-years {
+  font-family: 'Lora', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--sea);
+  margin-bottom: 4px;
+}
+
+.era-name {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+/* === 数据行 === */
+.stats-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-num {
+  font-family: 'Lora', serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--sun);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+/* === 卡片网格 === */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.placeholder-card {
+  padding: 48px 24px;
+  text-align: center;
+  border: 2px dashed var(--sea-light);
+  border-radius: var(--radius-md);
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* === 社区按钮 === */
+.community-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.community-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px;
+  background: #fff;
+  border: 1px solid var(--sea-light);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.community-btn:hover {
+  border-color: var(--sea);
+  box-shadow: 0 4px 16px rgba(107, 163, 190, 0.15);
+}
+
+.community-btn-icon {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+}
+
+.community-btn-title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.community-btn-desc {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  text-align: center;
+}
+
+/* === 关于 === */
+.about-content {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-content p {
+  margin-bottom: 14px;
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+/* === 底部 === */
+.footer {
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--dark);
+  color: rgba(255,255,255,0.6);
+}
+
+.footer-inner {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.footer-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.footer-text {
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.footer-copy {
+  font-size: 0.78rem;
+  opacity: 0.5;
+}
+
+/* === 响应式 === */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: rgba(250, 251, 252, 0.98);
+    backdrop-filter: blur(12px);
+    flex-direction: column;
+    padding: 12px 24px;
+    border-bottom: 1px solid rgba(107, 163, 190, 0.15);
+  }
+
+  .nav-links.active { display: flex; }
+  .nav-toggle { display: flex; }
+
+  .hero { padding: 120px 20px 72px; }
+  .section { padding: 56px 20px; }
+
+  .timeline-preview { flex-direction: column; align-items: center; }
+  .timeline-era { width: 100%; max-width: 300px; }
+
+  .stats-row { gap: 8px; }
+  .stat-item { padding: 16px 8px; }
+  .stat-num { font-size: 1.6rem; }
+}

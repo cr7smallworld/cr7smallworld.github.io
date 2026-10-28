@@ -1,0 +1,223 @@
+/* === 生涯档案页 === */
+
+.page-header {
+  padding: 100px 24px 40px;
+  text-align: center;
+  background: linear-gradient(170deg, var(--sea-light) 0%, var(--white) 100%);
+}
+
+.page-header-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header h1 {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+/* === 时期Tab === */
+.era-tabs {
+  position: sticky;
+  top: 56px;
+  z-index: 90;
+  background: rgba(250, 251, 252, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(107, 163, 190, 0.15);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.era-tabs::-webkit-scrollbar { display: none; }
+
+.era-tabs-inner {
+  display: flex;
+  gap: 4px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 10px 24px;
+}
+
+.era-tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text-light);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.era-tab:hover {
+  color: var(--sea);
+  background: var(--sea-light);
+}
+
+.era-tab.active {
+  color: var(--sea);
+  background: var(--sea-light);
+  border-color: var(--sea);
+  font-weight: 500;
+}
+
+/* === 时间线容器 === */
+.timeline-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.era-content {
+  display: none;
+}
+
+.era-content.active {
+  display: block;
+}
+
+/* === 时间线 === */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--sea-light);
+}
+
+/* === 时间线项目 === */
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -29px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sea-light);
+  border: 2px solid var(--sea);
+}
+
+.dot-highlight {
+  background: var(--sun);
+  border-color: var(--sun);
+  box-shadow: 0 0 0 4px var(--sun-light);
+}
+
+.timeline-date {
+  font-family: 'Lora', serif;
+  font-size: 0.82rem;
+  color: var(--sea);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* === 时间线卡片 === */
+.timeline-card {
+  background: #fff;
+  border: 1px solid var(--sea-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.timeline-card:hover {
+  border-color: var(--sea);
+}
+
+.timeline-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.timeline-card-header h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--dark);
+  line-height: 1.4;
+}
+
+.timeline-arrow {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.timeline-card.open .timeline-arrow {
+  transform: rotate(180deg);
+}
+
+.timeline-card-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 16px;
+}
+
+.timeline-card.open .timeline-card-body {
+  max-height: 500px;
+  padding: 0 16px 16px;
+}
+
+.timeline-card-body p {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.timeline-card-body p:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-stat {
+  font-size: 0.82rem;
+  color: var(--sun);
+  font-weight: 500;
+  padding-top: 4px;
+}
+
+/* === 占位 === */
+.era-placeholder {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* === 响应式 === */
+@media (max-width: 768px) {
+  .page-header { padding: 90px 20px 32px; }
+  .timeline-container { padding: 24px 16px 60px; }
+  .timeline { padding-left: 28px; }
+  .timeline-dot { left: -25px; width: 10px; height: 10px; }
+  .era-tabs-inner { padding: 8px 16px; }
+  .era-tab { padding: 6px 12px; font-size: 0.78rem; }
+}
