@@ -90,20 +90,49 @@ $('images').addEventListener('change', (e) => {
 });
 
 // ---------- 图片压缩 ----------
-function loadImage(file) {
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const isHeic = (f) => /heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name);
+
+// 先用 createImageBitmap 解码（大图更省内存，还会按照片方向自动转正），不行再退回 <img>
+async function decode(file) {
+  if ('createImageBitmap' in window) {
+    try {
+      return await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (_) { /* 退回下面的方法 */ }
+  }
   return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('图片读取失败'));
-    img.src = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
   });
 }
 
-async function compress(file) {
+function canvasToBlob(canvas, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode'))), 'image/jpeg', quality);
+  });
+}
+
+async function compress(file, n) {
   // 动图压缩会变成静图，原样上传（仓库限制单张1MB）
   if (file.type === 'image/gif') return file;
-  const img = await loadImage(file);
-  let { width, height } = img;
+
+  let img;
+  try {
+    img = await decode(file);
+  } catch (_) {
+    // 浏览器解不开，但本身是能用的格式且不大，就原样传
+    if (ALLOWED_TYPES.includes(file.type) && file.size <= 1024 * 1024) return file;
+    if (isHeic(file)) {
+      throw new Error(`第 ${n} 张是苹果/部分安卓相机的HEIC格式，浏览器打不开。可以在相机设置里关掉"高效格式"，或者截个图再传截图`);
+    }
+    throw new Error(`第 ${n} 张图片打不开（${file.name || '未命名'}，格式：${file.type || '未知'}）。换一张试试，或者截图后传截图`);
+  }
+
+  let width = img.width;
+  let height = img.height;
   const scale = Math.min(1, MAX_SIDE / Math.max(width, height));
   width = Math.round(width * scale);
   height = Math.round(height * scale);
@@ -111,19 +140,24 @@ async function compress(file) {
   const canvas = document.createElement('canvas');
   let quality = 0.85;
   let blob;
-  for (let i = 0; i < 6; i++) {
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(img, 0, 0, width, height);
-    blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
-    if (blob.size <= TARGET_BYTES) break;
-    if (quality > 0.6) quality -= 0.1;
-    else { width = Math.round(width * 0.8); height = Math.round(height * 0.8); }
+  try {
+    for (let i = 0; i < 6; i++) {
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      blob = await canvasToBlob(canvas, quality);
+      if (blob.size <= TARGET_BYTES) break;
+      if (quality > 0.6) quality -= 0.1;
+      else { width = Math.round(width * 0.8); height = Math.round(height * 0.8); }
+    }
+  } catch (_) {
+    throw new Error(`第 ${n} 张图片压缩失败，可能太大了，截图后再传试试`);
+  } finally {
+    if (img.close) img.close();
   }
-  URL.revokeObjectURL(img.src);
   return blob;
 }
 
@@ -132,9 +166,9 @@ async function uploadImages() {
   const folder = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}`;
   for (let i = 0; i < files.length; i++) {
     showMsg(`正在处理第 ${i + 1}/${files.length} 张图片…`);
-    const blob = await compress(files[i]);
+    const blob = await compress(files[i], i + 1);
     if (blob.size > 1024 * 1024) throw new Error(`第 ${i + 1} 张图片太大了（超过1MB）`);
-    const ext = blob.type === 'image/gif' ? 'gif' : 'jpg';
+    const ext = { 'image/gif': 'gif', 'image/png': 'png', 'image/webp': 'webp' }[blob.type] || 'jpg';
     const path = `${folder}/${i + 1}.${ext}`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: blob.type });
     if (error) throw new Error('图片上传失败：' + error.message);
