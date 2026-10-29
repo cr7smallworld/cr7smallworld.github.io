@@ -1,4 +1,5 @@
 // Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
+import { cropAvatar } from './cropper.js?v=20261030e';
 
 // 公开钥匙：本来就是写在网页里给所有人看的，权限只够"投稿"和"看审核通过的内容"
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
@@ -200,9 +201,13 @@ function updateRel() {
   $('imagesLabel').innerHTML = person
     ? '头像照片 <span class="opt">选填，1张</span>'
     : '上传图片 <span class="opt">选填，最多9张</span>';
-  if (person && files.length > 1) {
-    files = files.slice(0, 1);
-    [...$('preview').children].slice(1).forEach((n) => n.remove());
+  const wasAvatar = $('preview').classList.contains('avatar');
+  if ((person && files.length && !avatarSource) || (!person && wasAvatar)) {
+    files = [];
+    avatarSource = null;
+    $('images').value = '';
+    $('preview').innerHTML = '';
+    $('preview').classList.remove('avatar');
   }
   if (rel && !person) loadPeople();
   updateFw();
@@ -273,19 +278,69 @@ async function loadPeople() {
 }
 
 // ---------- 图片预览 ----------
-$('images').addEventListener('change', (e) => {
-  const max = isRelUpload() && relMode === 'person' ? 1 : MAX_IMAGES;
-  files = Array.from(e.target.files).slice(0, max);
-  if (e.target.files.length > max) showMsg(max === 1 ? '头像只要1张，只保留了第1张' : `最多9张，只保留了前9张`, 'warn');
-  else showMsg('');
+// ---------- 人物头像：选完图先弹出裁剪框 ----------
+let avatarSource = null;   // 原图留着，方便"重新调整"
+
+function showPreview() {
   const preview = $('preview');
   preview.innerHTML = '';
+  const avatar = isRelUpload() && relMode === 'person';
+  preview.classList.toggle('avatar', avatar && files.length > 0);
   files.forEach((f) => {
     const img = document.createElement('img');
     img.src = URL.createObjectURL(f);
     img.onload = () => URL.revokeObjectURL(img.src);
     preview.append(img);
   });
+  if (avatar && files.length && avatarSource) {
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.className = 'crop-again';
+    again.textContent = '重新调整';
+    again.addEventListener('click', () => openCrop(avatarSource));
+    preview.append(again);
+  }
+}
+
+async function openCrop(src) {
+  let source = src;
+  try {
+    if ((await sniff(source)) === 'image/heic') {
+      showMsg('这张是HEIC格式，正在转成JPG，可能要等几秒…');
+      const heic2any = await loadHeicLib();
+      const out = await heic2any({ blob: source, toType: 'image/jpeg', quality: 0.92 });
+      source = Array.isArray(out) ? out[0] : out;
+      showMsg('');
+    }
+    const blob = await cropAvatar(source);
+    if (!blob) return false;
+    avatarSource = source;
+    files = [new File([blob], 'avatar.jpg', { type: 'image/jpeg' })];
+    showPreview();
+    return true;
+  } catch (_) {
+    showMsg('这张图打不开，换一张试试，或者截图后传截图', 'error');
+    return false;
+  }
+}
+
+$('images').addEventListener('change', async (e) => {
+  if (isRelUpload() && relMode === 'person') {
+    const f = e.target.files[0];
+    const many = e.target.files.length > 1;
+    e.target.value = '';
+    if (!f) return;
+    if (many) showMsg('头像只要1张，用的是第1张', 'warn');
+    else showMsg('');
+    await openCrop(f);
+    return;
+  }
+  avatarSource = null;
+  const max = MAX_IMAGES;
+  files = Array.from(e.target.files).slice(0, max);
+  if (e.target.files.length > max) showMsg(max === 1 ? '头像只要1张，只保留了第1张' : `最多9张，只保留了前9张`, 'warn');
+  else showMsg('');
+  showPreview();
 });
 
 // ---------- 图片压缩 ----------
@@ -528,7 +583,9 @@ form.addEventListener('submit', async (e) => {
 $('again').addEventListener('click', () => {
   form.reset();
   files = [];
+  avatarSource = null;
   $('preview').innerHTML = '';
+  $('preview').classList.remove('avatar');
   $('summaryCount').textContent = '0';
   $('detailCount').textContent = '0';
   $('fanworksConsent').hidden = true;

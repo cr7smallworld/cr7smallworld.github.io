@@ -142,7 +142,7 @@
 
 .pp-top { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 18px; }
 .pp-photo { flex: none; width: 120px; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
-.pp-photo img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.pp-photo img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; }
 .pp-info { flex: 1; min-width: 0; }
 .pp-role { font-size: 0.9rem; font-weight: 500; color: var(--dark); margin-bottom: 8px; }
 .pp-alias, .pp-clubs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.8rem; }
