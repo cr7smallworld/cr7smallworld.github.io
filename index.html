@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/polish.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
 
@@ -50,12 +52,13 @@
           <p class="section-desc">从马德拉岛的小男孩到世界足坛的传奇，按时期记录每一个重要时刻</p>
         </div>
         <div class="timeline-preview">
-          <div class="timeline-era"><span class="era-years">1985-2003</span><span class="era-name">马德拉 &amp; 里斯本竞技</span></div>
-          <div class="timeline-era"><span class="era-years">2003-2009</span><span class="era-name">曼联（抬一）</span></div>
-          <div class="timeline-era"><span class="era-years">2009-2018</span><span class="era-name">皇家马德里</span></div>
-          <div class="timeline-era"><span class="era-years">2018-2021</span><span class="era-name">尤文图斯</span></div>
-          <div class="timeline-era"><span class="era-years">2021-2023</span><span class="era-name">曼联（抬二）</span></div>
-          <div class="timeline-era"><span class="era-years">2023-</span><span class="era-name">利雅得胜利</span></div>
+          <a class="timeline-era" href="career.html?era=sporting"><span class="era-years">1985-2003</span><span class="era-name">马德拉 &amp; 里斯本竞技</span></a>
+          <a class="timeline-era" href="career.html?era=mu1"><span class="era-years">2003-2009</span><span class="era-name">曼联（抬一）</span></a>
+          <a class="timeline-era" href="career.html?era=madrid"><span class="era-years">2009-2018</span><span class="era-name">皇家马德里</span></a>
+          <a class="timeline-era" href="career.html?era=juve"><span class="era-years">2018-2021</span><span class="era-name">尤文图斯</span></a>
+          <a class="timeline-era" href="career.html?era=mu2"><span class="era-years">2021-2022</span><span class="era-name">曼联（抬二）</span></a>
+          <a class="timeline-era" href="career.html?era=alnassr"><span class="era-years">2023-</span><span class="era-name">利雅得胜利</span></a>
+          <a class="timeline-era" href="career.html?era=portugal"><span class="era-years">2003-</span><span class="era-name">葡萄牙国家队</span></a>
         </div>
         <div class="section-more"><a href="career.html" class="more-link">查看完整生涯档案</a></div>
       </div>
@@ -85,6 +88,7 @@
           <h2>有趣事件 &amp; 性格萌点</h2>
           <p class="section-desc">记录一些可爱瞬间，认识一个更真实的他</p>
         </div>
+        <div class="home-preview" id="preview-fun"></div>
         <div class="section-more"><a href="fun.html" class="more-link">查看全部有趣事件</a></div>
       </div>
     </section>
@@ -96,6 +100,7 @@
           <h2>人物关系</h2>
           <p class="section-desc">队友、教练、对手之间的故事与羁绊</p>
         </div>
+        <div class="home-preview" id="preview-relations"></div>
         <div class="section-more"><a href="relations.html" class="more-link">查看全部人物关系</a></div>
       </div>
     </section>
@@ -107,6 +112,7 @@
           <h2>珍贵资料库</h2>
           <p class="section-desc">照片、杂志、视频……考古党的宝藏</p>
         </div>
+        <div class="home-preview" id="preview-archive"></div>
         <div class="section-more"><a href="archive.html" class="more-link">查看全部珍贵资料</a></div>
       </div>
     </section>
@@ -119,6 +125,7 @@
           <p class="section-desc">混剪、同人作品……展示iluo们的爱与才华</p>
           <p class="section-notice">投稿需注明原作者并获得同意</p>
         </div>
+        <div class="home-preview" id="preview-fanworks"></div>
         <div class="section-more"><a href="fanworks.html" class="more-link">查看全部精彩二创</a></div>
       </div>
     </section>
@@ -171,10 +178,15 @@
     <div class="footer-inner">
       <p class="footer-logo">CR7的小世界</p>
       <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="career.html">生涯档案</a><a href="honors.html">荣誉与数据</a><a href="fun.html">有趣事件</a><a href="relations.html">人物关系</a><a href="archive.html">珍贵资料库</a><a href="fanworks.html">精彩二创</a><a href="community.html">社区共建</a><a href="mine.html">我的投稿</a><a href="about.html">关于</a>
+      </nav>
       <p class="footer-copy">Made with ❤️ by iluo</p>
     </div>
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/vendor/supabase.js"></script>
+  <script src="js/home.js"></script>
 </body>
 </html>
