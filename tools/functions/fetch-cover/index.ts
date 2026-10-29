@@ -19,6 +19,14 @@ const URL_ = Deno.env.get('SUPABASE_URL')!;
 const PUB = JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS') || '{}')['default'] || Deno.env.get('SUPABASE_ANON_KEY')!;
 const SECRET = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') || '{}')['default'] || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// 新版 sb_secret_ 钥匙只能放在 apikey 头里，放进 Authorization 会被当成登录凭证认错
+// supabase-js 默认两个头都放，这里把 Authorization 去掉
+const adminFetch: typeof fetch = (input, init = {}) => {
+  const h = new Headers(init.headers || {});
+  if (SECRET.startsWith('sb_secret_') && h.get('Authorization') === `Bearer ${SECRET}`) h.delete('Authorization');
+  return fetch(input, { ...init, headers: h });
+};
+
 // 从视频链接找到封面图地址；不认识的平台返回 null
 async function findCover(raw: string): Promise<string | null> {
   let u: URL;
@@ -74,9 +82,10 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   const id = String(body.id || '');
   if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: '投稿编号不对' }, 400);
-  const admin = createClient(URL_, SECRET, { auth: { persistSession: false } });
+  const admin = createClient(URL_, SECRET, { auth: { persistSession: false }, global: { fetch: adminFetch } });
   const { data: it, error } = await admin.from('submissions').select('id, video_url, image_paths').eq('id', id).maybeSingle();
-  if (error || !it) return json({ error: '找不到这条投稿' }, 404);
+  if (error) return json({ error: '读投稿出错：' + error.message }, 500);
+  if (!it) return json({ error: '找不到这条投稿' }, 404);
   if (it.image_paths && it.image_paths.length) return json({ skipped: '已经有图了' });
   if (!it.video_url) return json({ skipped: '没有视频链接' });
 
@@ -85,7 +94,8 @@ Deno.serve(async (req) => {
   try { cover = await findCover(it.video_url); } catch { cover = null; }
   if (!cover) return json({ skipped: '这个平台拿不到封面' });
 
-  const img = await fetch(cover, { headers: { 'User-Agent': UA } });
+  let img: Response;
+  try { img = await fetch(cover, { headers: { 'User-Agent': UA } }); } catch { return json({ skipped: '封面下载失败' }); }
   const type = (img.headers.get('content-type') || '').split(';')[0];
   if (!img.ok || !/^image\/(jpeg|png|webp)$/.test(type)) return json({ skipped: '封面下载失败' });
   const bytes = new Uint8Array(await img.arrayBuffer());
