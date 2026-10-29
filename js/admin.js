@@ -224,8 +224,9 @@ function card(it) {
   return c;
 }
 
-// 没传图、只贴了B站或YouTube链接：通过的时候自动去拿封面
-const COVER_RE = /(^|\.)(bilibili\.com|b23\.tv|bili2233\.cn|youtube\.com|youtu\.be)(\/|$)/i;
+// 没传图、只贴了YouTube链接：通过的时候自动去拿封面
+// （B站会拦海外机房的服务器，2026.10.30决定不拿B站封面）
+const COVER_RE = /(^|\.)(youtube\.com|youtu\.be)(\/|$)/i;
 function wantsCover(it) {
   if (it.kind !== 'upload' || (it.image_paths && it.image_paths.length) || !it.video_url) return false;
   try { return COVER_RE.test(new URL(it.video_url).hostname + '/'); } catch (_) { return false; }
