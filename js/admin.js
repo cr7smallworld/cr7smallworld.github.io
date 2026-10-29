@@ -57,6 +57,7 @@ async function enter() {
   $('loginForm').hidden = true;
   $('panel').hidden = false;
   load();
+  loadEdits();
   loadFb();
 }
 
@@ -296,6 +297,7 @@ const fb = { all: [], tab: 'unread' };
 document.querySelectorAll('#viewTabs button').forEach((b) => b.addEventListener('click', () => {
   document.querySelectorAll('#viewTabs button').forEach((x) => x.classList.toggle('active', x === b));
   $('subView').hidden = b.dataset.view !== 'sub';
+  $('editView').hidden = b.dataset.view !== 'edit';
   $('fbView').hidden = b.dataset.view !== 'fb';
 }));
 document.querySelectorAll('#fbTabs button').forEach((b) => b.addEventListener('click', () => {
@@ -386,6 +388,133 @@ async function fbUpdate(it, patch, buttons, done) {
   Object.assign(it, patch);
   msg('fbPanelMsg', done, 'ok');
   renderFb();
+}
+
+// ================= 网友交的修改 =================
+const EDIT_FIELDS = [
+  ['summary', '一句话介绍 / 名字'], ['person_role', '一句话身份'], ['person_alias', '花名/CP名'],
+  ['fanwork_type', '作品分类'], ['fanwork_platform', '来源平台'], ['fanwork_author', '原作者'],
+  ['event_date', '事件时间'], ['detail', '详细介绍'], ['source', '出处'], ['video_url', '视频链接'],
+  ['tags', '标签'], ['uploader', '上传人'],
+];
+const edits = { all: [] };
+$('editRefresh').addEventListener('click', loadEdits);
+
+async function loadEdits() {
+  msg('editMsg', '加载中…');
+  const { data, error } = await supabase
+    .from('submission_edits')
+    .select('*, submissions!inner(id, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, person_role, person_alias, fanwork_type, fanwork_platform, fanwork_author)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) return msg('editMsg', '加载失败：' + error.message, 'error');
+  edits.all = data || [];
+  msg('editMsg', '');
+  renderEdits();
+}
+
+function renderEdits() {
+  $('cEdit').textContent = edits.all.length;
+  $('cEdit').hidden = edits.all.length === 0;
+  const box = $('editList');
+  box.innerHTML = '';
+  if (!edits.all.length) { box.append(el('p', 'admin-empty', '没有等审核的修改')); return; }
+  edits.all.forEach((e) => box.append(editCard(e)));
+}
+
+const show = (v) => (Array.isArray(v) ? v.map((t) => '#' + t).join(' ') : (v || ''));
+
+function gallery(paths) {
+  const g = el('div', 'a-gallery');
+  (paths || []).forEach((p) => {
+    const a = el('a');
+    a.href = imgUrl(p);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    const img = el('img');
+    img.loading = 'lazy';
+    img.src = imgUrl(p);
+    img.alt = '';
+    a.append(img);
+    g.append(a);
+  });
+  return g;
+}
+
+function editCard(e) {
+  const old = e.submissions;
+  const c = el('article', 'a-card');
+  const head = el('div', 'a-head');
+  head.append(
+    el('span', 'badge pending', '待审核修改'),
+    el('span', 'kind', old.kind === 'person' ? '人物' : '上传'),
+    el('span', 'a-sec', SECTION_NAMES[old.section] || old.section),
+    el('span', 'a-time', fmt(e.created_at)),
+  );
+  c.append(head);
+  c.append(el('h3', 'a-title', old.summary));
+
+  const diff = el('div', 'e-diff');
+  let changed = 0;
+  EDIT_FIELDS.forEach(([k, label]) => {
+    const a = show(old[k]);
+    const b = show(e[k]);
+    if (a === b) return;
+    changed++;
+    const row = el('div', 'e-row');
+    row.append(el('p', 'e-label', label));
+    row.append(el('p', 'e-old', a || '（空）'));
+    row.append(el('p', 'e-new', b || '（空）'));
+    diff.append(row);
+  });
+  const imgA = (old.image_paths || []).join('|');
+  const imgB = (e.image_paths || []).join('|');
+  if (imgA !== imgB) {
+    changed++;
+    const row = el('div', 'e-row');
+    row.append(el('p', 'e-label', '图片'));
+    const o = el('div', 'e-old'); o.append(old.image_paths && old.image_paths.length ? gallery(old.image_paths) : '（没有图）');
+    const n = el('div', 'e-new'); n.append(e.image_paths && e.image_paths.length ? gallery(e.image_paths) : '（没有图）');
+    row.append(o, n);
+    diff.append(row);
+  }
+  if (!changed) diff.append(el('p', 'admin-empty', '这份修改和原来一模一样'));
+  c.append(diff);
+
+  const act = el('div', 'a-actions');
+  const note = el('textarea');
+  note.rows = 2;
+  note.maxLength = 500;
+  note.placeholder = '驳回原因（选填，投稿人能看到）';
+  const btns = el('div', 'a-btns');
+  const ok = el('button', 'a-ok', '✓ 通过，换成新版');
+  const no = el('button', 'a-no', '✕ 驳回，保留旧版');
+  [ok, no].forEach((b) => (b.type = 'button'));
+  const all = [ok, no];
+  ok.addEventListener('click', async () => {
+    all.forEach((b) => (b.disabled = true));
+    const { data: gone, error } = await supabase.rpc('apply_edit', { p_edit: e.id });
+    if (error) { all.forEach((b) => (b.disabled = false)); return msg('editMsg', '操作失败：' + error.message, 'error'); }
+    if (gone && gone.length) await supabase.storage.from(BUCKET).remove(gone);
+    edits.all = edits.all.filter((x) => x.id !== e.id);
+    msg('editMsg', `「${old.summary.slice(0, 20)}」已换成新版`, 'ok');
+    renderEdits();
+    load();
+  });
+  no.addEventListener('click', async () => {
+    all.forEach((b) => (b.disabled = true));
+    const { data: gone, error } = await supabase.rpc('reject_edit', { p_edit: e.id, p_note: note.value });
+    if (error) { all.forEach((b) => (b.disabled = false)); return msg('editMsg', '操作失败：' + error.message, 'error'); }
+    if (gone && gone.length) await supabase.storage.from(BUCKET).remove(gone);
+    edits.all = edits.all.filter((x) => x.id !== e.id);
+    msg('editMsg', `「${old.summary.slice(0, 20)}」的修改已驳回，旧版不动`, 'ok');
+    renderEdits();
+  });
+  btns.append(ok, no);
+  act.append(note, btns);
+  c.append(act);
+  return c;
 }
 
 start();

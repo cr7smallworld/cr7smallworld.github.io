@@ -502,3 +502,6 @@ body { letter-spacing: 0.01em; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* 带 hidden 的元素一律不显示（有的地方 display 写死了会盖掉 hidden） */
+[hidden] { display: none !important; }

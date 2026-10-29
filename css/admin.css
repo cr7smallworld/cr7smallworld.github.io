@@ -202,3 +202,14 @@
 .view-tabs button b { margin-left: 4px; padding: 0 7px; font-size: 0.75rem; color: #fff; background: #B5544A; border-radius: 999px; }
 .view-tabs button b[hidden] { display: none; }
 .fb-msg { white-space: pre-line; }
+
+/* 网友交的修改：左旧右新 */
+.edit-hint { font-size: 0.82rem; color: var(--text-light); margin: 0; }
+.e-diff { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 12px; }
+.e-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.e-label { grid-column: 1 / -1; font-size: 0.76rem; font-weight: 500; color: var(--text-light); margin: 0; }
+.e-old, .e-new { margin: 0; padding: 8px 10px; font-size: 0.85rem; line-height: 1.7; white-space: pre-line; word-break: break-word; border-radius: 8px; }
+.e-old { color: #7A5A55; background: #F8ECEA; text-decoration: line-through; text-decoration-color: rgba(181, 84, 74, 0.5); }
+.e-new { color: #2F5A3B; background: #E8F2EA; }
+.e-old .a-gallery, .e-new .a-gallery { margin: 0; }
+@media (max-width: 560px) { .e-row { grid-template-columns: 1fr; } }

@@ -82,8 +82,13 @@ async function load() {
   if (!saved.length) return;
 
   $('loading').hidden = false;
-  const { data, error } = await supabase.rpc('check_submissions', { p_tokens: saved.map((x) => x.token) });
+  const tokens = saved.map((x) => x.token);
+  const [{ data, error }, { data: edits }] = await Promise.all([
+    supabase.rpc('check_submissions', { p_tokens: tokens }),
+    supabase.rpc('check_edits', { p_tokens: tokens }),
+  ]);
   $('loading').hidden = true;
+  const editBy = Object.fromEntries((edits || []).map((x) => [x.submission_id, x]));
   if (error) {
     box.append(el('p', 'mine-error', '查询失败了，刷新一下试试'));
     return;
@@ -118,11 +123,31 @@ async function load() {
       c.append(note);
       c.append(el('p', 'mine-when', '审核于 ' + fmt(it.reviewed_at)));
     }
+    // 最近一次修改的审核结果
+    const ed = editBy[it.id];
+    if (ed && it.status === 'approved') {
+      const n = el('p', 'mine-note edit ' + ed.status);
+      if (ed.status === 'pending') n.textContent = '你交的修改还在等站长审核，网站上暂时显示的是旧版';
+      else if (ed.status === 'approved') n.textContent = '你交的修改已通过，网站上已经换成新版了';
+      else {
+        n.append(el('b', null, '修改没通过：'));
+        n.append(document.createTextNode(ed.review_note || '站长没有写原因'));
+      }
+      c.append(n);
+    }
+    const links = el('div', 'mine-links');
     if (it.status === 'approved' && (it.kind === 'upload' || it.kind === 'person')) {
       const a = el('a', 'mine-link', '去网站上看看 →');
-      a.href = `${it.section}.html?id=${it.id}`;
-      c.append(a);
+      a.href = it.section === 'relations' ? `relations.html?${it.kind === 'person' ? 'p' : 'id'}=${it.id}` : `${it.section}.html?id=${it.id}`;
+      links.append(a);
     }
+    if (it.kind === 'upload' || it.kind === 'person') {
+      const ed2 = el('a', 'mine-link mine-edit', '编辑');
+      ed2.href = `submit.html?edit=${it.id}`;
+      ed2.addEventListener('click', () => { try { sessionStorage.setItem('cr7_edit_token_' + it.id, s.token); } catch (_) {} });
+      links.append(ed2);
+    }
+    if (links.children.length) c.append(links);
     const code = el('p', 'mine-code', '查询码：' + s.token);
     c.append(code);
     box.append(c);

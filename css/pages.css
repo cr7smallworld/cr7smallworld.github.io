@@ -101,3 +101,9 @@
 }
 #fbSection { margin-top: 8px; }
 .mine-title.fb-text { font-weight: 400; font-size: 0.92rem; line-height: 1.85; white-space: pre-line; }
+
+/* 我的投稿：编辑入口和修改状态 */
+.mine-links { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.mine-edit { color: var(--dark) !important; }
+.mine-note.edit { font-size: 0.82rem; }
+.mine-note.edit.pending { color: #8A6D1E; background: var(--sun-light); }

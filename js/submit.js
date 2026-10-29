@@ -280,18 +280,36 @@ async function loadPeople() {
 // ---------- 图片预览 ----------
 // ---------- 人物头像：选完图先弹出裁剪框 ----------
 let avatarSource = null;   // 原图留着，方便"重新调整"
+let editing = null;        // 编辑自己的投稿时：{ token, id, kind, status, ... }
+let existingPaths = [];    // 编辑时，这条原来就有的图
+const imgUrl = (p) => supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl;
 
 function showPreview() {
   const preview = $('preview');
   preview.innerHTML = '';
   const avatar = isRelUpload() && relMode === 'person';
-  preview.classList.toggle('avatar', avatar && files.length > 0);
-  files.forEach((f) => {
+  if (avatar && files.length) existingPaths = [];
+  preview.classList.toggle('avatar', avatar && (files.length > 0 || existingPaths.length > 0));
+  const thumb = (src, onRemove, revoke) => {
+    const wrap = document.createElement('span');
+    wrap.className = 'pv-item';
     const img = document.createElement('img');
-    img.src = URL.createObjectURL(f);
-    img.onload = () => URL.revokeObjectURL(img.src);
-    preview.append(img);
-  });
+    img.src = src;
+    if (revoke) img.onload = () => URL.revokeObjectURL(src);
+    wrap.append(img);
+    if (editing && !avatar) {
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'pv-del';
+      x.setAttribute('aria-label', '去掉这张');
+      x.textContent = '×';
+      x.addEventListener('click', onRemove);
+      wrap.append(x);
+    }
+    preview.append(wrap);
+  };
+  existingPaths.forEach((p, i) => thumb(imgUrl(p), () => { existingPaths.splice(i, 1); showPreview(); }));
+  files.forEach((f, i) => thumb(URL.createObjectURL(f), () => { files.splice(i, 1); showPreview(); }, true));
   if (avatar && files.length && avatarSource) {
     const again = document.createElement('button');
     again.type = 'button';
@@ -336,9 +354,11 @@ $('images').addEventListener('change', async (e) => {
     return;
   }
   avatarSource = null;
-  const max = MAX_IMAGES;
-  files = Array.from(e.target.files).slice(0, max);
-  if (e.target.files.length > max) showMsg(max === 1 ? '头像只要1张，只保留了第1张' : `最多9张，只保留了前9张`, 'warn');
+  const max = MAX_IMAGES - existingPaths.length;
+  if (max <= 0) { e.target.value = ''; return showMsg('已经有9张图了，先去掉几张再加', 'warn'); }
+  files = [...(editing ? files : []), ...Array.from(e.target.files)].slice(0, max);
+  e.target.value = '';
+  if (files.length >= max && e.target.files.length > max) showMsg(`最多9张，多出来的没加上`, 'warn');
   else showMsg('');
   showPreview();
 });
@@ -503,6 +523,7 @@ function rememberToken(token, summary) {
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (editing) return submitEdit();
   const section = $('section').value;
   const summary = $('summary').value.trim();
   const videoUrl = $('videoUrl').value.trim();
@@ -604,3 +625,149 @@ $('copyCode').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(code); $('copyCode').textContent = '已复制 ✓'; }
   catch (_) { prompt('长按复制查询码', code); }
 });
+
+
+// ================= 编辑自己的投稿 =================
+// 从"我的投稿"点"编辑"进来：submit.html?edit=投稿id
+// 查询码只认这台设备上存过的（或者"我的投稿"页临时交过来的），不放进网址
+async function findToken(id) {
+  const t = sessionStorage.getItem('cr7_edit_token_' + id);
+  if (t) return t;
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem('cr7_my_submissions')) || []; } catch (_) {}
+  if (!list.length) return null;
+  const { data } = await supabase.rpc('check_submissions', { p_tokens: list.map((x) => x.token) });
+  const hit = (data || []).find((x) => x.id === id);
+  return hit ? hit.token : null;
+}
+
+async function startEdit(id) {
+  document.querySelector('.kind-tabs').hidden = true;
+  $('kindDesc').textContent = '正在读取这条投稿…';
+  const token = await findToken(id);
+  if (!token) { $('kindDesc').textContent = '这台设备上找不到这条投稿的查询码。先去"我的投稿"粘贴查询码找回，再点编辑'; form.hidden = true; return; }
+  const { data: d, error } = await supabase.rpc('get_my_submission', { p_token: token, p_id: id });
+  if (error || !d) { $('kindDesc').textContent = '读取失败了，这条投稿可能已经被删除'; form.hidden = true; return; }
+  if (d.kind !== 'upload' && d.kind !== 'person') { $('kindDesc').textContent = '补充和纠错交了就不能再改了'; form.hidden = true; return; }
+
+  editing = { token, ...d };
+  kind = 'upload';
+  $('section').value = d.section;
+  relMode = d.kind === 'person' ? 'person' : 'moment';
+  updateRel();
+
+  // 板块、投什么、挂在谁下面都不能改
+  $('sectionField').hidden = true;
+  $('relModeField').hidden = true;
+  $('personPickField').hidden = true;
+  $('fanworksConsent').hidden = true;
+  $('kindDesc').textContent = d.status === 'approved'
+    ? '这条已经在网站上了。改完交上去以后，旧版照常显示，站长审核通过新版才会换上去'
+    : '改完交上去以后会重新排队等站长审核';
+  $('targetLabel').textContent = '你在修改的是这一条';
+  const names = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
+  $('targetMeta').textContent = [names[d.section], d.kind === 'person' ? '人物' : (d.person_name ? '和' + d.person_name : '')].filter(Boolean).join(' · ');
+  $('targetTitle').textContent = d.summary;
+  $('targetClear').hidden = true;
+  $('targetCard').hidden = false;
+  if (d.has_pending_edit) {
+    const n = document.createElement('p');
+    n.className = 'edit-note';
+    n.textContent = '你上次的修改还在等审核，下面填的是上次改的内容。再交一次会替换掉上次那份';
+    $('targetCard').append(n);
+  }
+
+  // 把原来的内容填进去
+  const set = (id2, v) => { $(id2).value = v || ''; };
+  set('summary', d.summary); set('eventDate', d.event_date); set('detail', d.detail); set('source', d.source);
+  set('videoUrl', d.video_url); set('uploader', d.uploader);
+  set('personRole', d.person_role); set('personAlias', d.person_alias); set('fwAuthor', d.fanwork_author);
+  $('summaryCount').textContent = (d.summary || '').length;
+  $('detailCount').textContent = (d.detail || '').length;
+  const tags = d.tags || [];
+  if (d.kind === 'person') {
+    $('clubPicker').querySelectorAll('input').forEach((i) => { i.checked = tags.includes(i.value); });
+  } else {
+    $('tagPicker').querySelectorAll('input').forEach((i) => { i.checked = tags.includes(i.value); });
+    $('customTags').value = tags.filter((t) => !PRESET_TAGS.includes(t)).join(' ');
+  }
+  if (d.fanwork_type) {
+    const r = form.querySelector(`input[name="fwType"][value="${CSS.escape(d.fanwork_type)}"]`);
+    if (r) r.checked = true;
+  }
+  if (d.fanwork_platform) {
+    const opt = [...$('fwPlatform').options].some((o) => o.value === d.fanwork_platform);
+    $('fwPlatform').value = opt ? d.fanwork_platform : '__other';
+    $('fwPlatformOther').hidden = opt;
+    if (!opt) $('fwPlatformOther').value = d.fanwork_platform;
+  }
+  existingPaths = [...(d.image_paths || [])];
+  showPreview();
+  btn.textContent = '提交修改';
+  $('submitBtn').nextElementSibling.textContent = '修改也要站长审核通过才会生效';
+}
+
+async function submitEdit() {
+  const person = editing.kind === 'person';
+  const fw = editing.section === 'fanworks' && editing.kind === 'upload';
+  const summary = $('summary').value.trim();
+  const videoUrl = $('videoUrl').value.trim();
+  if (!summary) return showMsg(person ? '请填写名字' : '请填写一句话介绍', 'error');
+  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('视频链接要以 http:// 或 https:// 开头', 'error');
+  const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
+  const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
+  const fwAuthor = $('fwAuthor').value.trim();
+  if (fw && !fwType) return showMsg('请选一下作品分类', 'error');
+  if (fw && !fwPlatform) return showMsg('请选一下来源平台', 'error');
+  if (fw && !fwAuthor) return showMsg('请填写原作者昵称', 'error');
+
+  btn.disabled = true;
+  try {
+    const added = files.length ? await uploadImages() : [];
+    const image_paths = person ? (added.length ? added : existingPaths).slice(0, 1) : [...existingPaths, ...added].slice(0, MAX_IMAGES);
+    showMsg('正在提交修改…');
+    const data = {
+      summary,
+      event_date: person || fw ? null : clean($('eventDate').value),
+      detail: clean($('detail').value),
+      source: fw ? null : clean($('source').value),
+      tags: person ? Array.from($('clubPicker').querySelectorAll('input:checked')).map((i) => i.value) : collectTags(),
+      uploader: clean($('uploader').value),
+      image_paths,
+      video_url: person ? null : (videoUrl || null),
+      person_role: person ? clean($('personRole').value) : null,
+      person_alias: person ? clean($('personAlias').value) : null,
+      fanwork_type: fw ? fwType : null,
+      fanwork_platform: fw ? fwPlatform : null,
+      fanwork_author: fw ? fwAuthor : null,
+    };
+    const { data: res, error } = await supabase.rpc('submit_edit', { p_token: editing.token, p_id: editing.id, p_data: data });
+    if (error) throw new Error(error.message);
+    sessionStorage.removeItem('cr7_edit_token_' + editing.id);
+    // 我的投稿里的标题跟着更新
+    try {
+      const list = JSON.parse(localStorage.getItem('cr7_my_submissions')) || [];
+      const it = list.find((x) => x.token === editing.token);
+      if (it) { it.summary = summary.slice(0, 60); localStorage.setItem('cr7_my_submissions', JSON.stringify(list)); }
+    } catch (_) {}
+    const done = $('done');
+    done.querySelector('h2').textContent = '修改交上去啦';
+    done.querySelector('h2').nextElementSibling.textContent = res === 'edit_pending'
+      ? '站长审核通过以后，网站上就会换成新版，在这之前大家看到的还是旧版'
+      : '已经重新排队，等站长审核';
+    done.querySelector('.done-code').hidden = true;
+    $('again').hidden = true;
+    form.hidden = true;
+    done.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    showMsg('提交失败了：' + err.message + '。可以稍后再试一次', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+{
+  const id = new URLSearchParams(location.search).get('edit');
+  if (id && /^[0-9a-f-]{36}$/i.test(id)) startEdit(id);
+}
