@@ -37,6 +37,11 @@ const btn = $('submitBtn');
 let kind = 'upload';
 let files = [];
 let target = null;   // 补充/纠错时，指向网站上已有的那一条
+let relMode = 'moment';  // 人物关系板块上传时：moment=糖点经历，person=添加人物
+let people = null;       // 已收录的人物（选"是谁"用），用到时才去读
+
+const CLUB_TAGS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
+const CLUB_LABELS = { '里斯本竞技': '里斯本竞技', '抬一': '曼联·抬一', '皇马': '皇马', '尤文': '尤文', '抬二': '曼联·抬二', '沙特': '利雅得胜利', '葡萄牙': '葡萄牙国家队' };
 
 const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
 
@@ -54,6 +59,7 @@ function setKind(k) {
   $('detail').placeholder = kind === 'upload' ? '' : (kind === 'supplement' ? '想补充的内容' : '正确的应该是什么，最好附上出处');
   if (kind === 'upload' && target) clearTarget();
   updateDetailLabel();
+  updateRel();
   const p = new URLSearchParams(location.search);
   p.set('kind', kind);
   history.replaceState(null, '', `?${p}`);
@@ -82,7 +88,9 @@ function updateDetailLabel() {
 
 function showTarget(it) {
   target = it;
-  $('targetMeta').textContent = `${SECTION_NAMES[it.section] || ''} · ${it.event_date || '时间未知'}`;
+  $('targetMeta').textContent = it.kind === 'person'
+    ? `${SECTION_NAMES[it.section] || ''} · 人物`
+    : `${SECTION_NAMES[it.section] || ''} · ${it.event_date || '时间未知'}`;
   $('targetTitle').textContent = it.summary;
   $('targetCard').hidden = false;
   $('summary').value = it.summary.slice(0, 100);
@@ -112,7 +120,7 @@ $('targetClear').addEventListener('click', clearTarget);
   if (!id || kind === 'upload' || !/^[0-9a-f-]{36}$/i.test(id)) return;
   const { data } = await supabase
     .from('submissions')
-    .select('id, section, summary, event_date')
+    .select('id, kind, section, summary, event_date')
     .eq('id', id)
     .maybeSingle();
   if (data) showTarget(data);
@@ -136,12 +144,104 @@ $('detail').addEventListener('input', (e) => { $('detailCount').textContent = e.
 // ---------- 二创须知 ----------
 $('section').addEventListener('change', (e) => {
   $('fanworksConsent').hidden = e.target.value !== 'fanworks';
+  updateRel();
 });
+
+// ---------- 人物关系：糖点经历 / 添加人物 ----------
+CLUB_TAGS.forEach((tag) => {
+  const label = document.createElement('label');
+  label.className = 'tag-chip';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.value = tag;
+  label.append(input, document.createTextNode(CLUB_LABELS[tag]));
+  $('clubPicker').append(label);
+});
+
+document.querySelectorAll('.rel-opt').forEach((b) => b.addEventListener('click', () => {
+  relMode = b.dataset.rel;
+  const p = new URLSearchParams(location.search);
+  p.set('rel', relMode);
+  history.replaceState(null, '', `?${p}`);
+  updateRel();
+}));
+{
+  const r = new URLSearchParams(location.search).get('rel');
+  if (r === 'person' || r === 'moment') relMode = r;
+}
+updateRel();
+
+function isRelUpload() {
+  return kind === 'upload' && $('section').value === 'relations';
+}
+
+function updateRel() {
+  if (!$('relModeField')) return;
+  const rel = isRelUpload();
+  const person = rel && relMode === 'person';
+  $('relModeField').hidden = !rel;
+  $('personPickField').hidden = !rel || person;
+  document.querySelectorAll('.rel-opt').forEach((b) => {
+    b.classList.toggle('active', b.dataset.rel === relMode);
+    b.setAttribute('aria-checked', String(b.dataset.rel === relMode));
+  });
+  document.querySelectorAll('.person-only').forEach((n) => (n.hidden = !person));
+  document.querySelectorAll('.not-person').forEach((n) => (n.hidden = person));
+
+  if (kind === 'upload') {
+    $('summaryLabel').innerHTML = person ? '名字 <em>必填</em>' : `${KINDS.upload.summaryLabel} <em>必填</em>`;
+    $('summary').placeholder = person ? '例如：费迪南德' : (rel ? '例如：08年欧冠夺冠后抱在一起哭' : KINDS.upload.summaryPlaceholder);
+    if (!target) {
+      $('detailLabel').innerHTML = person ? '简略介绍 <span class="opt">选填</span>' : '详细介绍 <span class="opt">选填</span>';
+      $('detail').placeholder = person ? '他是谁，和他是什么关系，一两段话就好' : '';
+    }
+  }
+  $('imagesLabel').innerHTML = person
+    ? '头像照片 <span class="opt">选填，1张</span>'
+    : '上传图片 <span class="opt">选填，最多9张</span>';
+  if (person && files.length > 1) {
+    files = files.slice(0, 1);
+    [...$('preview').children].slice(1).forEach((n) => n.remove());
+  }
+  if (rel && !person) loadPeople();
+}
+
+async function loadPeople() {
+  if (people) return;
+  people = [];
+  const { data, error } = await supabase
+    .from('submissions')
+    .select('id, summary, tags, person_role')
+    .eq('section', 'relations')
+    .eq('kind', 'person')
+    .eq('status', 'approved')
+    .order('summary')
+    .limit(1000);
+  const sel = $('personPick');
+  if (error) { $('personPickHint').textContent = '人物名单加载失败了，刷新一下试试'; return; }
+  people = data || [];
+  const groups = [...CLUB_TAGS, '其他'];
+  groups.forEach((g) => {
+    const list = people.filter((p) => {
+      const cs = (p.tags || []).filter((t) => CLUB_TAGS.includes(t));
+      return g === '其他' ? cs.length === 0 : cs.includes(g);
+    });
+    if (!list.length) return;
+    const og = document.createElement('optgroup');
+    og.label = CLUB_LABELS[g] || g;
+    list.forEach((p) => og.append(new Option(p.person_role ? `${p.summary}（${p.person_role}）` : p.summary, p.id)));
+    sel.append(og);
+  });
+  if (!people.length) $('personPickHint').textContent = '名单里还没有人，先切到"添加人物"把他加进来，审核通过后就能选了';
+  const want = new URLSearchParams(location.search).get('person');
+  if (want && people.some((p) => p.id === want)) sel.value = want;
+}
 
 // ---------- 图片预览 ----------
 $('images').addEventListener('change', (e) => {
-  files = Array.from(e.target.files).slice(0, MAX_IMAGES);
-  if (e.target.files.length > MAX_IMAGES) showMsg(`最多9张，只保留了前9张`, 'warn');
+  const max = isRelUpload() && relMode === 'person' ? 1 : MAX_IMAGES;
+  files = Array.from(e.target.files).slice(0, max);
+  if (e.target.files.length > max) showMsg(max === 1 ? '头像只要1张，只保留了第1张' : `最多9张，只保留了前9张`, 'warn');
   else showMsg('');
   const preview = $('preview');
   preview.innerHTML = '';
@@ -317,8 +417,12 @@ form.addEventListener('submit', async (e) => {
   const summary = $('summary').value.trim();
   const videoUrl = $('videoUrl').value.trim();
 
+  const relPerson = kind === 'upload' && section === 'relations' && relMode === 'person';
+  const relMoment = kind === 'upload' && section === 'relations' && relMode === 'moment';
+  const personId = relMoment ? $('personPick').value : '';
   if (!section) return showMsg('请选择投稿板块', 'error');
-  if (!summary) return showMsg('请填写' + KINDS[kind].summaryLabel, 'error');
+  if (relMoment && !personId) return showMsg('请选一下是谁和他之间的事', 'error');
+  if (!summary) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
   if (target && kind !== 'upload' && !$('detail').value.trim()) {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
   }
@@ -330,7 +434,7 @@ form.addEventListener('submit', async (e) => {
     const image_paths = files.length ? await uploadImages() : [];
     showMsg('正在提交…');
     const token = newToken();
-    const { error } = await supabase.from('submissions').insert({
+    const row = {
       token,
       kind,
       section,
@@ -343,9 +447,22 @@ form.addEventListener('submit', async (e) => {
       image_paths,
       video_url: videoUrl || null,
       target_id: target && kind !== 'upload' ? target.id : null,
-    });
+    };
+    if (relPerson) {
+      Object.assign(row, {
+        kind: 'person',
+        event_date: null,
+        video_url: null,
+        tags: Array.from($('clubPicker').querySelectorAll('input:checked')).map((i) => i.value),
+        person_role: clean($('personRole').value),
+        person_alias: clean($('personAlias').value),
+      });
+    }
+    if (relMoment) row.person_id = personId;
+    const { error } = await supabase.from('submissions').insert(row);
     if (error) throw new Error(error.message);
-    rememberToken(token, summary);
+    const who = relMoment ? (people || []).find((p) => p.id === personId) : null;
+    rememberToken(token, relPerson ? `添加人物：${summary}` : (who ? `${who.summary}：${summary}` : summary));
     $('doneCode').textContent = token;
     form.hidden = true;
     $('done').hidden = false;
@@ -365,6 +482,9 @@ $('again').addEventListener('click', () => {
   $('detailCount').textContent = '0';
   $('fanworksConsent').hidden = true;
   if (target) clearTarget();
+  const sec = new URLSearchParams(location.search).get('section');
+  if (sec && [...$('section').options].some((o) => o.value === sec)) $('section').value = sec;
+  updateRel();
   showMsg('');
   $('done').hidden = true;
   form.hidden = false;

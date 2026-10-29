@@ -285,3 +285,25 @@
 }
 .done-actions a.more-link, .done-actions button.more-link { margin: 0; }
 .done-actions { flex-wrap: wrap; }
+
+/* --- 人物关系：糖点经历 / 添加人物 --- */
+.rel-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rel-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: #fff;
+  border: 1.5px solid rgba(30, 42, 56, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rel-opt b { font-size: 0.95rem; font-weight: 500; color: var(--dark); }
+.rel-opt span { font-size: 0.76rem; line-height: 1.5; color: var(--text-light); }
+.rel-opt.active { border-color: var(--sun); background: #FFFCF5; }
+.rel-opt.active b::before { content: '✓ '; color: var(--sun); }
+@media (max-width: 480px) { .rel-mode { grid-template-columns: 1fr; } }

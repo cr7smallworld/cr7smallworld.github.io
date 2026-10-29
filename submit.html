@@ -65,25 +65,54 @@
           </select>
         </div>
 
+        <div class="field rel-only" id="relModeField" hidden>
+          <label>投什么 <em>必填</em></label>
+          <div class="rel-mode" role="radiogroup">
+            <button type="button" class="rel-opt" data-rel="moment"><b>糖点经历</b><span>给名单里已有的人加一段他们之间的事</span></button>
+            <button type="button" class="rel-opt" data-rel="person"><b>添加人物</b><span>名单里还没有这个人，把他加进来</span></button>
+          </div>
+        </div>
+
+        <div class="field rel-only" id="personPickField" hidden>
+          <label for="personPick">是谁和他之间的事 <em>必填</em></label>
+          <select id="personPick"><option value="">请选择人物</option></select>
+          <span class="hint" id="personPickHint">名单里没有这个人？先切到"添加人物"把他加进来，审核通过后就能选了</span>
+        </div>
+
         <div class="field" id="summaryField">
           <label for="summary" id="summaryLabel">一句话介绍 <em>必填</em></label>
           <input type="text" id="summary" maxlength="100" required>
           <span class="hint"><span id="summaryCount">0</span>/100</span>
         </div>
 
+        <div class="field person-only" hidden>
+          <label for="personRole">一句话身份 <span class="opt">选填</span></label>
+          <input type="text" id="personRole" maxlength="60" placeholder="例如：抬一队友 · 中卫 / 皇马主席 / 他的妈妈">
+        </div>
+
+        <div class="field person-only" hidden>
+          <label for="personAlias">花名 / CP名 <span class="opt">选填</span></label>
+          <input type="text" id="personAlias" maxlength="100" placeholder="例如：费列罗，多个用逗号隔开">
+        </div>
+
+        <div class="field person-only" hidden>
+          <label>和他在哪段时期有交集 <span class="opt">选填，可多选，不选就放进"其他"</span></label>
+          <div class="tag-picker" id="clubPicker"></div>
+        </div>
+
         <div class="field">
-          <label for="images">上传图片 <span class="opt">选填，最多9张</span></label>
+          <label for="images" id="imagesLabel">上传图片 <span class="opt">选填，最多9张</span></label>
           <input type="file" id="images" accept="image/*,.heic,.heif" multiple>
           <span class="hint">图片会自动压缩后再上传</span>
           <div class="preview" id="preview"></div>
         </div>
 
-        <div class="field">
+        <div class="field not-person">
           <label for="videoUrl">视频链接 <span class="opt">选填</span></label>
           <input type="url" id="videoUrl" maxlength="500" placeholder="B站、微博、YouTube 等视频地址">
         </div>
 
-        <div class="field">
+        <div class="field not-person">
           <label for="eventDate">事件发生时间 <span class="opt">选填，不填显示"未知"</span></label>
           <input type="text" id="eventDate" maxlength="50" placeholder="例如 2008年5月21日 / 2017年夏天">
         </div>
@@ -99,7 +128,7 @@
           <input type="text" id="source" maxlength="300" placeholder="原视频、原帖、杂志名称等">
         </div>
 
-        <div class="field">
+        <div class="field not-person">
           <label>标签 <span class="opt">选填</span></label>
           <div class="tag-picker" id="tagPicker"></div>
           <input type="text" id="customTags" maxlength="100" placeholder="自定义标签，用逗号或空格隔开">

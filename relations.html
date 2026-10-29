@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/board.css">
+  <link rel="stylesheet" href="css/relations.css">
   <link rel="stylesheet" href="css/polish.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
@@ -40,43 +41,35 @@
       <span class="kicker">No.04</span>
       <h1>人物关系</h1>
       <p>队友、教练、对手之间的故事与羁绊</p>
-      <a class="board-cta" data-submit-link href="submit.html">＋ 我要投稿</a>
+      <div class="board-ctas"><a class="board-cta" href="submit.html?kind=upload&amp;section=relations&amp;rel=moment">＋ 投稿糖点经历</a><a class="board-cta ghost" href="submit.html?kind=upload&amp;section=relations&amp;rel=person">＋ 添加人物</a></div>
     </div>
   </header>
 
   <div class="filter-bar">
     <div class="filter-inner">
-      <label class="search-box"><input type="search" id="fSearch" placeholder="搜关键词，比如 采访、发型、庆祝" aria-label="搜索"></label>
-      <select id="fClub" aria-label="按俱乐部筛选"><option value="">全部时期</option></select>
-      <select id="fYear" aria-label="按年份筛选"><option value="">全部年份</option></select>
-      <button type="button" class="sort-btn" id="fSort">最新在前 ↓</button>
-      <button type="button" class="clear-btn" id="clearBtn" hidden>清空筛选</button>
+      <label class="search-box"><input type="search" id="fSearch" placeholder="搜名字、花名、经历，比如 费迪南德、费列罗" aria-label="搜索"></label>
     </div>
-    <div class="tag-row" id="tagRow" hidden></div>
+    <div class="club-row" id="clubRow" role="tablist" aria-label="按时期看"></div>
   </div>
 
-  <main class="board-main">
-    <p class="result-count" id="resultCount"></p>
+  <main class="board-main people-main">
     <div class="board-state" id="loading"><p class="loading-dots">正在翻箱倒柜</p></div>
     <div class="board-state" id="loadError" hidden>
       <span class="state-mark" aria-hidden="true"></span><h2>加载失败了</h2><p>网络不太好，刷新一下试试</p>
     </div>
     <div class="board-state" id="empty" hidden>
-      <span class="state-mark" aria-hidden="true"></span><h2>还没有人物关系被收录</h2><p>他和谁之间有什么故事？来投稿讲讲</p>
-      <a class="board-cta" data-submit-link href="submit.html">＋ 做第一个投稿的人</a>
+      <span class="state-mark" aria-hidden="true"></span><h2>还没有人物被收录</h2><p>他身边有哪些人？来添加第一个</p>
+      <a class="board-cta" href="submit.html?kind=upload&amp;section=relations&amp;rel=person">＋ 添加人物</a>
     </div>
     <div class="board-state" id="noMatch" hidden>
-      <span class="state-mark" aria-hidden="true"></span><h2>没找到符合条件的</h2><p>换个关键词或者清空筛选看看</p>
+      <span class="state-mark" aria-hidden="true"></span><h2>没找到这个人</h2><p>换个名字搜搜，或者把他加进来</p>
     </div>
-    <div class="grid" id="grid"></div>
+    <div id="groups"></div>
+    <div class="people-add" id="peopleAdd" hidden>
+      <p>名单里少了谁？</p>
+      <a class="more-link" href="submit.html?kind=upload&amp;section=relations&amp;rel=person">添加人物</a>
+    </div>
   </main>
-
-  <div class="modal" id="modal" hidden role="dialog" aria-modal="true">
-    <div class="modal-box">
-      <button type="button" class="modal-close" id="modalClose" aria-label="关闭">×</button>
-      <div id="modalBody"></div>
-    </div>
-  </div>
 
   <footer class="footer">
     <div class="footer-inner">
@@ -91,6 +84,6 @@
 
   <script src="js/main.js"></script>
   <script src="js/vendor/supabase.js"></script>
-  <script type="module" src="js/board.js"></script>
+  <script type="module" src="js/relations.js"></script>
 </body>
 </html>

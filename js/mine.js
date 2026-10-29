@@ -3,7 +3,7 @@ const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const STORE = 'cr7_my_submissions';
-const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错' };
+const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错', person: '添加人物' };
 const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
 const STATUS_NAMES = { pending: '审核中', approved: '已通过 ✓', rejected: '未通过' };
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -68,7 +68,7 @@ async function load() {
       c.append(note);
       c.append(el('p', 'mine-when', '审核于 ' + fmt(it.reviewed_at)));
     }
-    if (it.status === 'approved' && it.kind === 'upload') {
+    if (it.status === 'approved' && (it.kind === 'upload' || it.kind === 'person')) {
       const a = el('a', 'mine-link', '去网站上看看 →');
       a.href = `${it.section}.html?id=${it.id}`;
       c.append(a);

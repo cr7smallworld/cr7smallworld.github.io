@@ -1,0 +1,225 @@
+/* === 人物关系：按时期分组的人物名单 === */
+
+.board-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+.board-ctas .board-cta { margin-top: 0; }
+.board-cta.ghost {
+  color: var(--dark);
+  background: #fff;
+  border: 1px solid rgba(30, 42, 56, 0.14);
+  box-shadow: none;
+}
+
+/* --- 时期切换 --- */
+.club-row {
+  display: flex;
+  gap: 8px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.club-row::-webkit-scrollbar { display: none; }
+.club-chip {
+  flex: none;
+  padding: 5px 14px;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text-light);
+  background: #fff;
+  border: 1px solid rgba(30, 42, 56, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.club-chip:hover { color: var(--dark); border-color: var(--sea); }
+.club-chip.active { color: #fff; background: var(--dark); border-color: var(--dark); }
+
+/* --- 分组 --- */
+.people-main { max-width: 820px; }
+
+.people-group { margin-bottom: 40px; }
+
+.pg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line, rgba(30, 42, 56, 0.08));
+}
+.pg-head h2 {
+  font-family: var(--serif, serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--dark);
+  letter-spacing: 0.04em;
+}
+.pg-years { font-family: 'Lora', serif; font-size: 0.82rem; font-weight: 600; color: var(--sun); }
+.pg-count { margin-left: auto; font-size: 0.78rem; color: var(--text-light); }
+
+/* --- 一个人一行 --- */
+.person { border-bottom: 1px solid var(--line, rgba(30, 42, 56, 0.08)); scroll-margin-top: 170px; }
+.mm { scroll-margin-top: 190px; }
+
+.person-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 6px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.person-head:hover { background: rgba(214, 232, 240, 0.25); }
+.person.open .person-head { background: linear-gradient(100deg, #FFFCF5, transparent 70%); }
+
+.p-avatar {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--cloud);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(212, 168, 71, 0.55);
+}
+.p-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.p-avatar.empty {
+  display: grid;
+  place-items: center;
+  font-family: var(--serif, serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--sun);
+  background: var(--sun-light);
+}
+
+.p-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.p-line1 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.p-name { font-size: 1.02rem; font-weight: 500; color: var(--dark); }
+.p-alias {
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  color: #9A7425;
+  background: var(--sun-light);
+  border-radius: 999px;
+}
+.p-role { font-size: 0.82rem; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.p-side { flex: none; display: flex; align-items: center; gap: 10px; }
+.p-count { font-size: 0.75rem; color: var(--sea); }
+.p-arrow {
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(30, 42, 56, 0.14);
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.25s;
+}
+.p-arrow::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+  color: var(--text-light);
+}
+.person.open .p-arrow { background: var(--dark); border-color: var(--dark); transform: rotate(180deg); }
+.person.open .p-arrow::after { color: #fff; }
+
+/* --- 展开的内容 --- */
+.person-panel { padding: 6px 6px 22px 72px; animation: ppIn 0.3s ease; }
+@keyframes ppIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.pp-top { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 18px; }
+.pp-photo { flex: none; width: 120px; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+.pp-photo img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.pp-info { flex: 1; min-width: 0; }
+.pp-role { font-size: 0.9rem; font-weight: 500; color: var(--dark); margin-bottom: 8px; }
+.pp-alias, .pp-clubs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.8rem; }
+.pp-alias b, .pp-clubs b { font-weight: 500; color: var(--text-light); margin-right: 2px; }
+.pp-alias span { padding: 1px 9px; color: #9A7425; background: var(--sun-light); border-radius: 999px; }
+.pp-clubs span { padding: 1px 9px; color: var(--sea); background: var(--sea-light); border-radius: 999px; }
+.pp-intro { margin-top: 10px; font-size: 0.9rem; line-height: 1.95; color: #34495E; white-space: pre-line; }
+
+.pp-h {
+  font-family: var(--serif, serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+.pp-moments .pp-h:only-child { font-family: inherit; font-weight: 400; font-size: 0.85rem; color: var(--text-light); }
+
+/* 糖点时间线 */
+.mm-list { list-style: none; position: relative; padding-left: 20px; }
+.mm-list::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(var(--sun), rgba(212, 168, 71, 0.15));
+}
+.mm { position: relative; padding-bottom: 18px; }
+.mm::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--sun);
+}
+.mm.flash { animation: mmFlash 2.2s ease; border-radius: 8px; }
+@keyframes mmFlash { 0%, 40% { background: var(--sun-light); } 100% { background: transparent; } }
+.mm-date { font-family: 'Lora', serif; font-size: 0.76rem; font-weight: 600; color: var(--sun); }
+.mm-title { font-size: 0.95rem; font-weight: 500; color: var(--dark); line-height: 1.55; margin: 2px 0 4px; }
+.mm-detail { font-size: 0.86rem; line-height: 1.85; color: #4A5A6A; white-space: pre-line; }
+.mm-gallery { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.mm-gallery a { width: 84px; height: 84px; border-radius: 8px; overflow: hidden; background: var(--cloud); }
+.mm-gallery img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.mm-gallery a:hover img { transform: scale(1.06); }
+.mm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 6px; font-size: 0.74rem; color: var(--text-light); }
+.mm-video { color: var(--sea); text-decoration: none; font-weight: 500; }
+.mm-fix { color: var(--text-light); opacity: 0.75; }
+
+.pp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.pp-btn {
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--dark);
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid rgba(30, 42, 56, 0.14);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.pp-btn.main { color: #fff; background: var(--dark); border-color: var(--dark); }
+
+.people-add { text-align: center; padding: 10px 0 20px; color: var(--text-light); font-size: 0.88rem; }
+.people-add p { margin-bottom: 10px; }
+
+@media (max-width: 640px) {
+  .club-row { padding: 0 14px 10px; }
+  .pg-head h2 { font-size: 1.1rem; }
+  .person-head { gap: 12px; padding: 12px 2px; }
+  .p-avatar { width: 46px; height: 46px; }
+  .p-count { display: none; }
+  .person-panel { padding: 4px 2px 20px; }
+  .pp-photo { width: 92px; }
+}

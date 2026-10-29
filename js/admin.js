@@ -3,7 +3,7 @@ const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const BUCKET = 'submissions';
 
-const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错' };
+const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错', person: '新人物' };
 const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
 const STATUS_NAMES = { pending: '待审核', approved: '已通过', rejected: '未通过' };
 
@@ -69,19 +69,19 @@ async function load() {
   msg('panelMsg', '加载中…');
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, created_at, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, target_id, status, review_note, reviewed_at')
+    .select('id, created_at, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, target_id, person_id, person_role, person_alias, status, review_note, reviewed_at')
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) return msg('panelMsg', '加载失败：' + error.message, 'error');
   state.all = data || [];
 
   // 补充/纠错指向的那一条，查出标题
-  const ids = [...new Set(state.all.map((x) => x.target_id).filter(Boolean))];
+  const ids = [...new Set(state.all.flatMap((x) => [x.target_id, x.person_id]).filter(Boolean))];
   state.targets = {};
   state.all.forEach((x) => (state.targets[x.id] = x));
   const missing = ids.filter((id) => !state.targets[id]);
   if (missing.length) {
-    const { data: t } = await supabase.from('submissions').select('id, summary, section').in('id', missing);
+    const { data: t } = await supabase.from('submissions').select('id, kind, summary, section, status').in('id', missing);
     (t || []).forEach((x) => (state.targets[x.id] = x));
   }
   msg('panelMsg', '');
@@ -133,7 +133,13 @@ function card(it) {
     c.append(el('p', 'a-target', `针对：${t ? t.summary : '（原条目已删除）'}`));
   }
 
-  c.append(el('h3', 'a-title', it.summary));
+  if (it.person_id) {
+    const t = state.targets[it.person_id];
+    const tip = !t ? '（这个人物已删除）' : (t.status === 'approved' ? '' : `（这个人物还${t.status === 'pending' ? '没审核' : '被驳回了'}，要先通过人物，这条才会显示）`);
+    c.append(el('p', 'a-target', `人物：${t ? t.summary : ''}${tip}`));
+  }
+
+  c.append(el('h3', 'a-title', it.kind === 'person' ? `添加人物：${it.summary}` : it.summary));
 
   if (it.image_paths && it.image_paths.length) {
     const g = el('div', 'a-gallery');
@@ -154,10 +160,12 @@ function card(it) {
 
   const dl = el('dl', 'a-meta');
   const row = (k, v) => { if (v) dl.append(el('dt', null, k), el('dd', null, v)); };
-  row('事件时间', it.event_date);
+  row('一句话身份', it.person_role);
+  row('花名/CP名', it.person_alias);
+  row(it.kind === 'person' ? '时期' : '事件时间', it.kind === 'person' ? (it.tags || []).join('、') || '其他' : it.event_date);
   row('出处', it.source);
   row('上传人', it.uploader || '匿名');
-  row('标签', (it.tags || []).map((t) => '#' + t).join(' '));
+  if (it.kind !== 'person') row('标签', (it.tags || []).map((t) => '#' + t).join(' '));
   const v = safeUrl(it.video_url);
   if (v) {
     dl.append(el('dt', null, '视频'));
@@ -211,15 +219,21 @@ async function review(it, status, note, buttons) {
 }
 
 async function remove(it, buttons) {
-  if (!confirm(`确定删除「${it.summary.slice(0, 30)}」吗？图片也会一起删掉，删了就找不回来了`)) return;
-  buttons.forEach((b) => (b.disabled = true));
-  if (it.image_paths && it.image_paths.length) {
-    await supabase.storage.from(BUCKET).remove(it.image_paths);
+  let children = [];
+  if (it.kind === 'person') {
+    const { data } = await supabase.from('submissions').select('id, image_paths').eq('person_id', it.id);
+    children = data || [];
   }
+  const extra = children.length ? `\n挂在这个人物下面的 ${children.length} 条糖点也会一起删掉。` : '';
+  if (!confirm(`确定删除「${it.summary.slice(0, 30)}」吗？图片也会一起删掉，删了就找不回来了${extra}`)) return;
+  buttons.forEach((b) => (b.disabled = true));
+  const paths = [...(it.image_paths || []), ...children.flatMap((x) => x.image_paths || [])];
+  if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
   const { error } = await supabase.from('submissions').delete().eq('id', it.id);
   buttons.forEach((b) => (b.disabled = false));
   if (error) return msg('panelMsg', '删除失败：' + error.message, 'error');
-  state.all = state.all.filter((x) => x.id !== it.id);
+  const gone = new Set([it.id, ...children.map((x) => x.id)]);
+  state.all = state.all.filter((x) => !gone.has(x.id));
   msg('panelMsg', '已删除', 'ok');
   render();
 }

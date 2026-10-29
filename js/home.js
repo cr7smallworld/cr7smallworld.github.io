@@ -15,8 +15,8 @@ function el(tag, cls, text) {
 async function load() {
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, section, summary, event_date, image_paths')
-    .eq('kind', 'upload')
+    .select('id, kind, section, summary, event_date, image_paths, person_role')
+    .in('kind', ['upload', 'person'])
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
     .limit(80);
@@ -25,19 +25,20 @@ async function load() {
   SECTIONS.forEach((sec) => {
     const box = document.getElementById('preview-' + sec);
     if (!box) return;
-    const items = (data || []).filter((x) => x.section === sec).slice(0, 3);
+    // 人物关系板块首页放最新收录的人物，其他板块放最新投稿
+    const items = (data || []).filter((x) => x.section === sec && (sec === 'relations' ? x.kind === 'person' : x.kind === 'upload')).slice(0, 3);
     if (!items.length) {
       const p = el('p', 'home-empty');
       p.append('这里还空着，');
       const a = el('a', null, '来投第一条吧');
-      a.href = `submit.html?kind=upload&section=${sec}`;
+      a.href = `submit.html?kind=upload&section=${sec}${sec === 'relations' ? '&rel=person' : ''}`;
       p.append(a);
       box.replaceWith(p);
       return;
     }
     items.forEach((it) => {
       const a = el('a', 'hp-card');
-      a.href = `${sec}.html?id=${it.id}`;
+      a.href = sec === 'relations' ? `relations.html?p=${it.id}` : `${sec}.html?id=${it.id}`;
       if (it.image_paths && it.image_paths.length) {
         const w = el('div', 'hp-img');
         const img = el('img');
@@ -50,7 +51,7 @@ async function load() {
         a.append(el('div', 'hp-noimg', '7'));
       }
       const b = el('div', 'hp-body');
-      b.append(el('p', 'hp-date', it.event_date || '时间未知'), el('p', 'hp-title', it.summary));
+      b.append(el('p', 'hp-date', it.kind === 'person' ? (it.person_role || '人物') : (it.event_date || '时间未知')), el('p', 'hp-title', it.summary));
       a.append(b);
       box.append(a);
     });
