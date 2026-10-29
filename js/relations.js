@@ -241,12 +241,14 @@ function fillPanel(panel, p) {
   const act = el('div', 'pp-actions');
   const add = el('a', 'pp-btn main', '＋ 投稿他们的糖点');
   add.href = `submit.html?kind=upload&section=relations&rel=moment&person=${p.id}`;
+  const sup = el('a', 'pp-btn', '补充人物介绍');
+  sup.href = `submit.html?kind=supplement&section=relations&target=${p.id}`;
   const fix = el('a', 'pp-btn', '人物介绍有错？去纠错');
   fix.href = `submit.html?kind=correction&section=relations&target=${p.id}`;
   const share = el('button', 'pp-btn', '复制链接');
   share.type = 'button';
   share.addEventListener('click', () => copyLink(share, `?p=${p.id}`, `【CR7的小世界】他和${p.summary}`));
-  act.append(add, fix, share);
+  act.append(add, sup, fix, share);
   panel.append(act);
 }
 
@@ -285,9 +287,11 @@ function moment(m) {
   }
   foot.append(el('span', null, '出处：' + (m.source || '未知')));
   foot.append(el('span', null, '投稿：' + (m.uploader || '匿名')));
+  const sup = el('a', 'mm-fix', '补充');
+  sup.href = `submit.html?kind=supplement&section=relations&target=${m.id}`;
   const fix = el('a', 'mm-fix', '纠错');
   fix.href = `submit.html?kind=correction&section=relations&target=${m.id}`;
-  foot.append(fix);
+  foot.append(sup, fix);
   li.append(foot);
   return li;
 }

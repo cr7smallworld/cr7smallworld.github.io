@@ -337,6 +337,7 @@
   cursor: pointer;
 }
 
+.m-links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .m-fix { font-size: 0.8rem; color: var(--text-light); }
 
 body.no-scroll { overflow: hidden; }

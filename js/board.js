@@ -205,9 +205,13 @@ function openDetail(it) {
   share.append(wb, cp);
   box.append(share);
 
+  const links = el('p', 'm-links');
+  const sup = el('a', 'm-fix', '还知道更多？去补充');
+  sup.href = `submit.html?kind=supplement&section=${SECTION}&target=${it.id}`;
   const fix = el('a', 'm-fix', '这条有错？去纠错');
   fix.href = `submit.html?kind=correction&section=${SECTION}&target=${it.id}`;
-  box.append(fix);
+  links.append(sup, fix);
+  box.append(links);
 
   $('modal').hidden = false;
   document.body.classList.add('no-scroll');
