@@ -205,10 +205,37 @@ function card(it) {
   no.addEventListener('click', () => review(it, 'rejected', note.value, [ok, no, del]));
   del.addEventListener('click', () => remove(it, [ok, no, del]));
   btns.append(ok, no, del);
+  if (it.status === 'approved' && wantsCover(it)) {
+    const cv = el('button', 'a-no', '重新拿封面');
+    cv.type = 'button';
+    cv.addEventListener('click', async () => {
+      cv.disabled = true;
+      msg('panelMsg', '正在拿视频封面…');
+      const r = await fetchCover(it);
+      cv.disabled = false;
+      msg('panelMsg', r.ok ? '封面拿到了' : r.fail, r.ok ? 'ok' : 'error');
+      if (r.ok) render();
+    });
+    btns.append(cv);
+  }
   act.append(note, btns);
   c.append(act);
 
   return c;
+}
+
+// 没传图、只贴了B站或YouTube链接：通过的时候自动去拿封面
+const COVER_RE = /(^|\.)(bilibili\.com|b23\.tv|bili2233\.cn|youtube\.com|youtu\.be)(\/|$)/i;
+function wantsCover(it) {
+  if (it.kind !== 'upload' || (it.image_paths && it.image_paths.length) || !it.video_url) return false;
+  try { return COVER_RE.test(new URL(it.video_url).hostname + '/'); } catch (_) { return false; }
+}
+
+async function fetchCover(it) {
+  const { data, error } = await supabase.functions.invoke('fetch-cover', { body: { id: it.id } });
+  if (error) return { fail: '拿封面出错了，可以等会儿点"重新拿封面"再试' };
+  if (data && data.path) { it.image_paths = [data.path]; return { ok: true }; }
+  return { fail: (data && data.skipped) || '没拿到封面' };
 }
 
 async function review(it, status, note, buttons) {
@@ -218,7 +245,14 @@ async function review(it, status, note, buttons) {
   buttons.forEach((b) => (b.disabled = false));
   if (error) return msg('panelMsg', '操作失败：' + error.message, 'error');
   Object.assign(it, patch);
-  msg('panelMsg', `「${it.summary.slice(0, 20)}」已${status === 'approved' ? '通过' : '驳回'}`, 'ok');
+  const name = `「${it.summary.slice(0, 20)}」已${status === 'approved' ? '通过' : '驳回'}`;
+  if (status === 'approved' && wantsCover(it)) {
+    msg('panelMsg', name + '，正在拿视频封面…');
+    const r = await fetchCover(it);
+    msg('panelMsg', r.ok ? name + '，视频封面也拿到了' : `${name}，不过${r.fail}`, r.ok ? 'ok' : 'error');
+  } else {
+    msg('panelMsg', name, 'ok');
+  }
   render();
 }
 
