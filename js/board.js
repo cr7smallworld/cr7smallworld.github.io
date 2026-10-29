@@ -206,7 +206,7 @@ function openDetail(it) {
   box.append(share);
 
   const fix = el('a', 'm-fix', '这条有错？去纠错');
-  fix.href = `submit.html?kind=correction&section=${SECTION}`;
+  fix.href = `submit.html?kind=correction&section=${SECTION}&target=${it.id}`;
   box.append(fix);
 
   $('modal').hidden = false;

@@ -42,9 +42,16 @@
 
       <p class="kind-desc" id="kindDesc"></p>
 
+      <div class="target-card" id="targetCard" hidden>
+        <p class="target-label" id="targetLabel">你要纠错的是这一条</p>
+        <p class="target-meta" id="targetMeta"></p>
+        <p class="target-title" id="targetTitle"></p>
+        <button type="button" class="target-clear" id="targetClear">不是这条，我自己填</button>
+      </div>
+
       <form id="submitForm" class="submit-form" novalidate>
 
-        <div class="field">
+        <div class="field" id="sectionField">
           <label for="section">投稿板块 <em>必填</em></label>
           <select id="section" required>
             <option value="">请选择</option>
@@ -55,7 +62,7 @@
           </select>
         </div>
 
-        <div class="field">
+        <div class="field" id="summaryField">
           <label for="summary" id="summaryLabel">一句话介绍 <em>必填</em></label>
           <input type="text" id="summary" maxlength="100" required>
           <span class="hint"><span id="summaryCount">0</span>/100</span>
@@ -79,7 +86,7 @@
         </div>
 
         <div class="field">
-          <label for="detail">详细介绍 <span class="opt">选填</span></label>
+          <label for="detail" id="detailLabel">详细介绍 <span class="opt">选填</span></label>
           <textarea id="detail" rows="6" maxlength="3000"></textarea>
           <span class="hint"><span id="detailCount">0</span>/3000</span>
         </div>

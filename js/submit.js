@@ -36,6 +36,9 @@ const msg = $('formMsg');
 const btn = $('submitBtn');
 let kind = 'upload';
 let files = [];
+let target = null;   // 补充/纠错时，指向网站上已有的那一条
+
+const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
 
 // ---------- 投稿类型 ----------
 function setKind(k) {
@@ -49,6 +52,8 @@ function setKind(k) {
   $('summaryLabel').innerHTML = `${cfg.summaryLabel} <em>必填</em>`;
   $('summary').placeholder = cfg.summaryPlaceholder;
   $('detail').placeholder = kind === 'upload' ? '' : (kind === 'supplement' ? '想补充的内容' : '正确的应该是什么，最好附上出处');
+  if (kind === 'upload' && target) clearTarget();
+  updateDetailLabel();
   const p = new URLSearchParams(location.search);
   p.set('kind', kind);
   history.replaceState(null, '', `?${p}`);
@@ -65,6 +70,53 @@ setKind(new URLSearchParams(location.search).get('kind'));
     document.getElementById('fanworksConsent').hidden = sec !== 'fanworks';
   }
 }
+
+// ---------- 从"这条有错？去纠错"进来：自动认出是哪一条 ----------
+function updateDetailLabel() {
+  const lbl = $('detailLabel');
+  if (target && kind === 'correction') lbl.innerHTML = '正确的应该是什么 <em>必填</em>';
+  else if (target && kind === 'supplement') lbl.innerHTML = '想补充的内容 <em>必填</em>';
+  else lbl.innerHTML = '详细介绍 <span class="opt">选填</span>';
+  $('targetLabel').textContent = kind === 'supplement' ? '你要补充的是这一条' : '你要纠错的是这一条';
+}
+
+function showTarget(it) {
+  target = it;
+  $('targetMeta').textContent = `${SECTION_NAMES[it.section] || ''} · ${it.event_date || '时间未知'}`;
+  $('targetTitle').textContent = it.summary;
+  $('targetCard').hidden = false;
+  $('summary').value = it.summary.slice(0, 100);
+  $('section').value = it.section;
+  $('fanworksConsent').hidden = true;
+  $('summaryField').hidden = true;
+  $('sectionField').hidden = true;
+  updateDetailLabel();
+}
+
+function clearTarget() {
+  target = null;
+  $('targetCard').hidden = true;
+  $('summaryField').hidden = false;
+  $('sectionField').hidden = false;
+  $('summary').value = '';
+  $('summaryCount').textContent = '0';
+  const p = new URLSearchParams(location.search);
+  p.delete('target');
+  history.replaceState(null, '', `?${p}`);
+  updateDetailLabel();
+}
+$('targetClear').addEventListener('click', clearTarget);
+
+(async () => {
+  const id = new URLSearchParams(location.search).get('target');
+  if (!id || kind === 'upload' || !/^[0-9a-f-]{36}$/i.test(id)) return;
+  const { data } = await supabase
+    .from('submissions')
+    .select('id, section, summary, event_date')
+    .eq('id', id)
+    .maybeSingle();
+  if (data) showTarget(data);
+})();
 
 // ---------- 预设标签 ----------
 PRESET_TAGS.forEach((tag) => {
@@ -211,6 +263,9 @@ form.addEventListener('submit', async (e) => {
 
   if (!section) return showMsg('请选择投稿板块', 'error');
   if (!summary) return showMsg('请填写' + KINDS[kind].summaryLabel, 'error');
+  if (target && kind !== 'upload' && !$('detail').value.trim()) {
+    return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
+  }
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('视频链接要以 http:// 或 https:// 开头', 'error');
   if (section === 'fanworks' && !$('consent').checked) return showMsg('二创投稿需要先注明原作者并获得同意', 'error');
 
@@ -229,6 +284,7 @@ form.addEventListener('submit', async (e) => {
       uploader: clean($('uploader').value),
       image_paths,
       video_url: videoUrl || null,
+      target_id: target && kind !== 'upload' ? target.id : null,
     });
     if (error) throw new Error(error.message);
     form.hidden = true;
@@ -248,6 +304,7 @@ $('again').addEventListener('click', () => {
   $('summaryCount').textContent = '0';
   $('detailCount').textContent = '0';
   $('fanworksConsent').hidden = true;
+  if (target) clearTarget();
   showMsg('');
   $('done').hidden = true;
   form.hidden = false;
