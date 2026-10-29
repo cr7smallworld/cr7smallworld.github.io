@@ -1,0 +1,230 @@
+/* === 投稿页 === */
+.submit-page {
+  padding: 96px 24px 72px;
+  background: var(--cloud);
+  min-height: 100vh;
+}
+
+.submit-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.kind-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kind-tab {
+  flex: 1;
+  padding: 12px 8px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text-light);
+  background: var(--white);
+  border: 1px solid var(--sea-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.kind-tab.active {
+  color: var(--white);
+  background: var(--sea);
+  border-color: var(--sea);
+  font-weight: 500;
+}
+
+.kind-desc {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.submit-form {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 28px 24px;
+}
+
+.field {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.field label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--dark);
+}
+
+.field label em {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--sun);
+  margin-left: 4px;
+}
+
+.field .opt {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-left: 4px;
+}
+
+.field input[type="text"],
+.field input[type="url"],
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--white);
+  border: 1px solid #D5DEE6;
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s;
+}
+
+.field textarea { resize: vertical; }
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--sea);
+}
+
+.field input[type="file"] {
+  font-size: 0.9rem;
+}
+
+.hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--text-light);
+  text-align: right;
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.preview img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tag-chip {
+  display: inline-flex !important;
+  align-items: center;
+  padding: 4px 12px;
+  margin: 0 !important;
+  font-weight: 400 !important;
+  font-size: 0.85rem;
+  color: var(--sea) !important;
+  background: var(--sea-light);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tag-chip input {
+  display: none;
+}
+
+.tag-chip:has(input:checked) {
+  color: var(--white) !important;
+  background: var(--sea);
+}
+
+.check {
+  display: flex !important;
+  gap: 8px;
+  align-items: flex-start;
+  font-weight: 400 !important;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.check input { margin-top: 4px; }
+
+.form-msg {
+  min-height: 1.5em;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.form-msg.error { color: #C0392B; }
+.form-msg.warn { color: var(--sun); }
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--white);
+  background: var(--sea);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.submit-btn:hover { opacity: 0.9; }
+.submit-btn:disabled { opacity: 0.5; cursor: wait; }
+
+.review-note {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.done {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.done-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.done h2 { color: var(--dark); margin-bottom: 8px; }
+.done p { color: var(--text-light); }
+
+.done-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.done-actions button.more-link {
+  font: inherit;
+  background: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .submit-page { padding: 80px 16px 56px; }
+  .submit-form { padding: 22px 16px; }
+  .kind-tab { font-size: 0.85rem; padding: 10px 4px; }
+}

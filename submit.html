@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>投稿 · CR7的小世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/submit.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="index.html#honors">荣誉与数据</a></li>
+        <li><a href="index.html#fun">有趣事件</a></li>
+        <li><a href="index.html#relations">人物关系</a></li>
+        <li><a href="index.html#archive">珍贵资料库</a></li>
+        <li><a href="index.html#fanworks">精彩二创</a></li>
+        <li><a href="index.html#community">社区共建</a></li>
+        <li><a href="index.html#about">关于</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="submit-page">
+    <div class="submit-inner">
+
+      <div class="kind-tabs" role="tablist">
+        <button type="button" class="kind-tab" data-kind="upload">📤 我要上传</button>
+        <button type="button" class="kind-tab" data-kind="supplement">📝 我要补充</button>
+        <button type="button" class="kind-tab" data-kind="correction">🔧 我要纠错</button>
+      </div>
+
+      <p class="kind-desc" id="kindDesc"></p>
+
+      <form id="submitForm" class="submit-form" novalidate>
+
+        <div class="field">
+          <label for="section">投稿板块 <em>必填</em></label>
+          <select id="section" required>
+            <option value="">请选择</option>
+            <option value="fun">有趣事件 &amp; 性格萌点</option>
+            <option value="relations">人物关系</option>
+            <option value="archive">珍贵资料库</option>
+            <option value="fanworks">精彩二创</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="summary" id="summaryLabel">一句话介绍 <em>必填</em></label>
+          <input type="text" id="summary" maxlength="100" required>
+          <span class="hint"><span id="summaryCount">0</span>/100</span>
+        </div>
+
+        <div class="field">
+          <label for="images">上传图片 <span class="opt">选填，最多9张</span></label>
+          <input type="file" id="images" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+          <span class="hint">图片会自动压缩后再上传</span>
+          <div class="preview" id="preview"></div>
+        </div>
+
+        <div class="field">
+          <label for="videoUrl">视频链接 <span class="opt">选填</span></label>
+          <input type="url" id="videoUrl" maxlength="500" placeholder="B站、微博、YouTube 等视频地址">
+        </div>
+
+        <div class="field">
+          <label for="eventDate">事件发生时间 <span class="opt">选填，不填显示"未知"</span></label>
+          <input type="text" id="eventDate" maxlength="50" placeholder="例如 2008年5月21日 / 2017年夏天">
+        </div>
+
+        <div class="field">
+          <label for="detail">详细介绍 <span class="opt">选填</span></label>
+          <textarea id="detail" rows="6" maxlength="3000"></textarea>
+          <span class="hint"><span id="detailCount">0</span>/3000</span>
+        </div>
+
+        <div class="field">
+          <label for="source">出处 <span class="opt">选填，不填显示"未知"</span></label>
+          <input type="text" id="source" maxlength="300" placeholder="原视频、原帖、杂志名称等">
+        </div>
+
+        <div class="field">
+          <label>标签 <span class="opt">选填</span></label>
+          <div class="tag-picker" id="tagPicker"></div>
+          <input type="text" id="customTags" maxlength="100" placeholder="自定义标签，用逗号或空格隔开">
+        </div>
+
+        <div class="field">
+          <label for="uploader">上传人 <span class="opt">选填，不填显示"匿名"</span></label>
+          <input type="text" id="uploader" maxlength="30">
+        </div>
+
+        <div class="field fanworks-only" id="fanworksConsent" hidden>
+          <label class="check">
+            <input type="checkbox" id="consent">
+            我已在出处里注明原作者，并已获得原作者同意
+          </label>
+        </div>
+
+        <p class="form-msg" id="formMsg" role="status"></p>
+
+        <button type="submit" class="submit-btn" id="submitBtn">提交投稿</button>
+        <p class="review-note">所有投稿审核通过后才会显示在网站上</p>
+      </form>
+
+      <div class="done" id="done" hidden>
+        <p class="done-icon">❤️</p>
+        <h2>收到啦，谢谢你！</h2>
+        <p>审核通过后就会出现在小世界里</p>
+        <div class="done-actions">
+          <button type="button" class="more-link" id="again">再投一条</button>
+          <a href="index.html" class="more-link">回到首页</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script type="module" src="js/submit.js"></script>
+</body>
+</html>
