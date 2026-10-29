@@ -65,6 +65,11 @@
           </select>
         </div>
 
+        <div class="field fw-only" hidden>
+          <label>作品分类 <em>必填</em></label>
+          <div class="tag-picker" id="fwTypePicker" role="radiogroup"></div>
+        </div>
+
         <div class="field rel-only" id="relModeField" hidden>
           <label>投什么 <em>必填</em></label>
           <div class="rel-mode" role="radiogroup">
@@ -108,11 +113,11 @@
         </div>
 
         <div class="field not-person">
-          <label for="videoUrl">视频链接 <span class="opt">选填</span></label>
+          <label for="videoUrl" id="videoLabel">视频链接 <span class="opt">选填</span></label>
           <input type="url" id="videoUrl" maxlength="500" placeholder="B站、微博、YouTube 等视频地址">
         </div>
 
-        <div class="field not-person">
+        <div class="field not-person not-fw">
           <label for="eventDate">事件发生时间 <span class="opt">选填，不填显示"未知"</span></label>
           <input type="text" id="eventDate" maxlength="50" placeholder="例如 2008年5月21日 / 2017年夏天">
         </div>
@@ -123,7 +128,23 @@
           <span class="hint"><span id="detailCount">0</span>/3000</span>
         </div>
 
-        <div class="field">
+        <div class="field fw-only" hidden>
+          <label for="fwPlatform">来源平台 <em>必填</em></label>
+          <select id="fwPlatform">
+            <option value="">请选择</option>
+            <option>微博</option><option>小红书</option><option>B站</option><option>抖音</option>
+            <option>LOFTER</option><option>推特</option><option>YouTube</option><option>ins</option>
+            <option value="__other">其它</option>
+          </select>
+          <input type="text" id="fwPlatformOther" maxlength="30" placeholder="写一下是哪个平台" hidden>
+        </div>
+
+        <div class="field fw-only" hidden>
+          <label for="fwAuthor">原作者昵称 <em>必填</em></label>
+          <input type="text" id="fwAuthor" maxlength="60" placeholder="原作者在这个平台上的昵称">
+        </div>
+
+        <div class="field not-fw">
           <label for="source">出处 <span class="opt">选填，不填显示"未知"</span></label>
           <input type="text" id="source" maxlength="300" placeholder="原视频、原帖、杂志名称等">
         </div>
@@ -142,7 +163,7 @@
         <div class="field fanworks-only" id="fanworksConsent" hidden>
           <label class="check">
             <input type="checkbox" id="consent">
-            我已在出处里注明原作者，并已获得原作者同意
+            我已获得原作者同意，可以转到这里
           </label>
         </div>
 

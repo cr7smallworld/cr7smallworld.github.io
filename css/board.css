@@ -358,3 +358,16 @@ body.no-scroll { overflow: hidden; }
   .modal { padding: 0; align-items: flex-end; }
   .modal-box { max-height: 92vh; border-radius: var(--radius-md) var(--radius-md) 0 0; padding: 24px 18px 28px; }
 }
+
+/* 精彩二创：卡片顶上的作品分类 */
+.fw-type {
+  display: inline-block;
+  padding: 1px 10px;
+  font-family: inherit !important;
+  font-size: 0.72rem !important;
+  font-weight: 500;
+  color: #9A7425 !important;
+  background: var(--sun-light);
+  border-radius: 999px;
+  margin-bottom: 6px !important;
+}

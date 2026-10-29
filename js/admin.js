@@ -69,7 +69,7 @@ async function load() {
   msg('panelMsg', '加载中…');
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, created_at, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, target_id, person_id, person_role, person_alias, status, review_note, reviewed_at')
+    .select('id, created_at, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, target_id, person_id, person_role, person_alias, fanwork_type, fanwork_platform, fanwork_author, status, review_note, reviewed_at')
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) return msg('panelMsg', '加载失败：' + error.message, 'error');
@@ -160,6 +160,9 @@ function card(it) {
 
   const dl = el('dl', 'a-meta');
   const row = (k, v) => { if (v) dl.append(el('dt', null, k), el('dd', null, v)); };
+  row('作品分类', it.fanwork_type);
+  row('来源平台', it.fanwork_platform);
+  row('原作者', it.fanwork_author);
   row('一句话身份', it.person_role);
   row('花名/CP名', it.person_alias);
   row(it.kind === 'person' ? '时期' : '事件时间', it.kind === 'person' ? (it.tags || []).join('、') || '其他' : it.event_date);

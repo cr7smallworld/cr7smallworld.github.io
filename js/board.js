@@ -9,6 +9,9 @@ const BUCKET = 'submissions';
 const CLUBS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
 
 const SECTION = document.body.dataset.section;
+// 精彩二创：没有事件时间，年份筛选换成按作品分类筛选
+const FW = SECTION === 'fanworks';
+const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '其它'];
 const $ = (id) => document.getElementById(id);
 
 const state = { all: [], q: '', club: '', year: '', tag: '', sort: 'desc' };
@@ -21,6 +24,13 @@ const yearOf = (item) => {
 };
 const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 
+// 二创卡片顶上那一行：分类小牌子
+function fwLine(it) {
+  const p = el('p', 'card-date fw-type');
+  p.textContent = it.fanwork_type || '二创';
+  return p;
+}
+
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -32,7 +42,8 @@ function el(tag, cls, text) {
 async function load() {
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, created_at, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url')
+    .select('id, created_at, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url'
+      + (FW ? ', fanwork_type, fanwork_platform, fanwork_author' : ''))
     .eq('section', SECTION)
     .eq('kind', 'upload')
     .eq('status', 'approved')
@@ -52,9 +63,15 @@ async function load() {
 
 // ---------- 筛选项 ----------
 function buildFilters() {
-  const years = [...new Set(state.all.map(yearOf).filter(Boolean))].sort((a, b) => b - a);
   const yearSel = $('fYear');
-  years.forEach((y) => yearSel.append(new Option(y + '年', y)));
+  if (FW) {
+    yearSel.setAttribute('aria-label', '按作品分类筛选');
+    yearSel.options[0].textContent = '全部分类';
+    FW_TYPES.forEach((t) => yearSel.append(new Option(t, t)));
+  } else {
+    const years = [...new Set(state.all.map(yearOf).filter(Boolean))].sort((a, b) => b - a);
+    years.forEach((y) => yearSel.append(new Option(y + '年', y)));
+  }
   if (state.year) yearSel.value = state.year;
 
   const counts = {};
@@ -80,10 +97,10 @@ function syncTagButtons() {
 
 function matches(it) {
   if (state.club && !(it.tags || []).includes(state.club)) return false;
-  if (state.year && yearOf(it) !== state.year) return false;
+  if (state.year && (FW ? it.fanwork_type !== state.year : yearOf(it) !== state.year)) return false;
   if (state.tag && !(it.tags || []).includes(state.tag)) return false;
   if (state.q) {
-    const hay = [it.summary, it.detail, it.source, it.event_date, it.uploader, ...(it.tags || [])].join(' ').toLowerCase();
+    const hay = [it.summary, it.detail, it.source, it.event_date, it.uploader, it.fanwork_type, it.fanwork_platform, it.fanwork_author, ...(it.tags || [])].join(' ').toLowerCase();
     if (!state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w))) return false;
   }
   return true;
@@ -91,6 +108,7 @@ function matches(it) {
 
 function sortKey(it) {
   // 有事件年份的按年份排，没有的按投稿时间
+  if (FW) return new Date(it.created_at).getTime();
   return yearOf(it) ? Number(yearOf(it)) * 1e13 : new Date(it.created_at).getTime() / 1000;
 }
 
@@ -126,16 +144,18 @@ function card(it) {
     if (it.image_paths.length > 1) wrap.append(el('span', 'img-count', `${it.image_paths.length}张`));
     c.append(wrap);
   } else if (safeUrl(it.video_url)) {
-    c.append(el('div', 'card-video', '▶ 视频'));
+    c.append(el('div', 'card-video', FW ? '▶ 看原作' : '▶ 视频'));
   }
   const body = el('div', 'card-body');
-  body.append(el('p', 'card-date', it.event_date || '时间未知'));
+  body.append(FW ? fwLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
   body.append(el('h3', 'card-title', it.summary));
   if (it.detail) body.append(el('p', 'card-excerpt', it.detail));
   const tags = el('div', 'card-tags');
   (it.tags || []).slice(0, 4).forEach((t) => tags.append(el('span', 'card-tag' + (CLUBS.includes(t) ? ' club' : ''), '#' + t)));
   body.append(tags);
-  body.append(el('p', 'card-by', '投稿：' + (it.uploader || '匿名')));
+  body.append(el('p', 'card-by', FW
+    ? `原作者：${it.fanwork_author || '未知'}${it.fanwork_platform ? ' · ' + it.fanwork_platform : ''}`
+    : '投稿：' + (it.uploader || '匿名')));
   c.append(body);
   const open = () => openDetail(it);
   c.addEventListener('click', open);
@@ -147,7 +167,7 @@ function card(it) {
 function openDetail(it) {
   const box = $('modalBody');
   box.innerHTML = '';
-  box.append(el('p', 'm-date', it.event_date || '时间未知'));
+  box.append(FW ? fwLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
   box.append(el('h2', 'm-title', it.summary));
 
   if (it.image_paths && it.image_paths.length) {
@@ -169,7 +189,7 @@ function openDetail(it) {
 
   const v = safeUrl(it.video_url);
   if (v) {
-    const a = el('a', 'm-video', '▶ 去看视频');
+    const a = el('a', 'm-video', FW ? '▶ 去看原作' : '▶ 去看视频');
     a.href = v;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
@@ -179,7 +199,10 @@ function openDetail(it) {
   if (it.detail) box.append(el('p', 'm-detail', it.detail));
 
   const meta = el('dl', 'm-meta');
-  [['出处', it.source || '未知'], ['投稿', it.uploader || '匿名']].forEach(([k, val]) => {
+  const rows = FW
+    ? [['原作者', it.fanwork_author || '未知'], ['来源平台', it.fanwork_platform || '未知'], ['投稿', it.uploader || '匿名']]
+    : [['出处', it.source || '未知'], ['投稿', it.uploader || '匿名']];
+  rows.forEach(([k, val]) => {
     meta.append(el('dt', null, k), el('dd', null, val));
   });
   box.append(meta);

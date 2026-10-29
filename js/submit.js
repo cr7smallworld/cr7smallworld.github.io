@@ -40,6 +40,7 @@ let target = null;   // 补充/纠错时，指向网站上已有的那一条
 let relMode = 'moment';  // 人物关系板块上传时：moment=糖点经历，person=添加人物
 let people = null;       // 已收录的人物（选"是谁"用），用到时才去读
 
+const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '其它'];
 const CLUB_TAGS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
 const CLUB_LABELS = { '里斯本竞技': '里斯本竞技', '抬一': '曼联·抬一', '皇马': '皇马', '尤文': '尤文', '抬二': '曼联·抬二', '沙特': '利雅得胜利', '葡萄牙': '葡萄牙国家队' };
 
@@ -204,7 +205,41 @@ function updateRel() {
     [...$('preview').children].slice(1).forEach((n) => n.remove());
   }
   if (rel && !person) loadPeople();
+  updateFw();
 }
+
+// ---------- 精彩二创：分类 / 来源平台 / 原作者 ----------
+function isFwUpload() {
+  return kind === 'upload' && $('section').value === 'fanworks';
+}
+
+function updateFw() {
+  const fw = isFwUpload();
+  document.querySelectorAll('.fw-only').forEach((n) => (n.hidden = !fw));
+  $('fanworksConsent').hidden = !fw;
+  document.querySelectorAll('.not-fw').forEach((n) => {
+    if (fw) n.hidden = true;
+    else if (!(n.classList.contains('not-person') && isRelUpload() && relMode === 'person')) n.hidden = false;
+  });
+  $('videoLabel').innerHTML = fw ? '视频/帖子链接 <span class="opt">选填</span>' : '视频链接 <span class="opt">选填</span>';
+  $('videoUrl').placeholder = fw ? '原作品的视频或帖子地址' : 'B站、微博、YouTube 等视频地址';
+}
+
+FW_TYPES.forEach((t) => {
+  const label = document.createElement('label');
+  label.className = 'tag-chip';
+  const input = document.createElement('input');
+  input.type = 'radio';
+  input.name = 'fwType';
+  input.value = t;
+  label.append(input, document.createTextNode(t));
+  $('fwTypePicker').append(label);
+});
+
+$('fwPlatform').addEventListener('change', (e) => {
+  $('fwPlatformOther').hidden = e.target.value !== '__other';
+  if (e.target.value === '__other') $('fwPlatformOther').focus();
+});
 
 async function loadPeople() {
   if (people) return;
@@ -427,7 +462,14 @@ form.addEventListener('submit', async (e) => {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
   }
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('视频链接要以 http:// 或 https:// 开头', 'error');
-  if (section === 'fanworks' && !$('consent').checked) return showMsg('二创投稿需要先注明原作者并获得同意', 'error');
+  const fwUpload = kind === 'upload' && section === 'fanworks';
+  const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
+  const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
+  const fwAuthor = $('fwAuthor').value.trim();
+  if (fwUpload && !fwType) return showMsg('请选一下作品分类', 'error');
+  if (fwUpload && !fwPlatform) return showMsg($('fwPlatform').value === '__other' ? '请写一下是哪个平台' : '请选一下来源平台', 'error');
+  if (fwUpload && !fwAuthor) return showMsg('请填写原作者昵称', 'error');
+  if (fwUpload && !$('consent').checked) return showMsg('二创投稿需要先获得原作者同意', 'error');
 
   btn.disabled = true;
   try {
@@ -459,6 +501,15 @@ form.addEventListener('submit', async (e) => {
       });
     }
     if (relMoment) row.person_id = personId;
+    if (fwUpload) {
+      Object.assign(row, {
+        event_date: null,
+        source: null,
+        fanwork_type: fwType,
+        fanwork_platform: fwPlatform,
+        fanwork_author: fwAuthor,
+      });
+    }
     const { error } = await supabase.from('submissions').insert(row);
     if (error) throw new Error(error.message);
     const who = relMoment ? (people || []).find((p) => p.id === personId) : null;
@@ -484,6 +535,7 @@ $('again').addEventListener('click', () => {
   if (target) clearTarget();
   const sec = new URLSearchParams(location.search).get('section');
   if (sec && [...$('section').options].some((o) => o.value === sec)) $('section').value = sec;
+  $('fwPlatformOther').hidden = true;
   updateRel();
   showMsg('');
   $('done').hidden = true;
