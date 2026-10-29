@@ -154,8 +154,34 @@ $('images').addEventListener('change', (e) => {
 });
 
 // ---------- 图片压缩 ----------
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const isHeic = (f) => /heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name);
+// 看文件开头几个字节判断真实格式，不信文件名和浏览器报的类型
+// （有的手机把HEIC照片标成 image/jpeg，之前就是这样传上去一张打不开的图）
+async function sniff(file) {
+  const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const ascii = (i, j) => String.fromCharCode(...b.slice(i, j));
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
+  if (b[0] === 0x89 && ascii(1, 4) === 'PNG') return 'image/png';
+  if (ascii(0, 3) === 'GIF') return 'image/gif';
+  if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return 'image/webp';
+  if (ascii(4, 8) === 'ftyp' && /^(heic|heix|hevc|hevx|heim|heis|mif1|msf1|avif)$/.test(ascii(8, 12))) return 'image/heic';
+  return 'unknown';
+}
+
+// HEIC 转换库比较大，只有真碰到HEIC照片时才加载
+let heicLib;
+function loadHeicLib() {
+  if (window.heic2any) return Promise.resolve(window.heic2any);
+  if (!heicLib) {
+    heicLib = new Promise((resolve, reject) => {
+      const sc = document.createElement('script');
+      sc.src = 'js/vendor/heic2any.min.js';
+      sc.onload = () => (window.heic2any ? resolve(window.heic2any) : reject(new Error('load')));
+      sc.onerror = () => reject(new Error('load'));
+      document.head.append(sc);
+    });
+  }
+  return heicLib;
+}
 
 // 先用 createImageBitmap 解码（大图更省内存，还会按照片方向自动转正），不行再退回 <img>
 async function decode(file) {
@@ -180,19 +206,32 @@ function canvasToBlob(canvas, quality) {
 }
 
 async function compress(file, n) {
+  const real = await sniff(file);
+
   // 动图压缩会变成静图，原样上传（仓库限制单张1MB）
-  if (file.type === 'image/gif') return file;
+  if (real === 'image/gif') return new Blob([file], { type: 'image/gif' });
+
+  let source = file;
+  if (real === 'image/heic') {
+    showMsg(`第 ${n} 张是HEIC格式，正在转成JPG，可能要等几秒…`);
+    try {
+      const heic2any = await loadHeicLib();
+      const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+      source = Array.isArray(out) ? out[0] : out;
+    } catch (_) {
+      throw new Error(`第 ${n} 张是HEIC格式，转换失败了。可以在相机设置里关掉"高效格式"，或者截个图再传截图`);
+    }
+  } else if (real === 'unknown') {
+    throw new Error(`第 ${n} 张不是能识别的图片（${file.name || '未命名'}）。换一张试试，或者截图后传截图`);
+  }
 
   let img;
   try {
-    img = await decode(file);
+    img = await decode(source);
   } catch (_) {
-    // 浏览器解不开，但本身是能用的格式且不大，就原样传
-    if (ALLOWED_TYPES.includes(file.type) && file.size <= 1024 * 1024) return file;
-    if (isHeic(file)) {
-      throw new Error(`第 ${n} 张是苹果/部分安卓相机的HEIC格式，浏览器打不开。可以在相机设置里关掉"高效格式"，或者截个图再传截图`);
-    }
-    throw new Error(`第 ${n} 张图片打不开（${file.name || '未命名'}，格式：${file.type || '未知'}）。换一张试试，或者截图后传截图`);
+    // 浏览器解不开，但文件本身确实是jpg/png/webp且不大，就原样传
+    if (real !== 'image/heic' && source.size <= 1024 * 1024) return new Blob([source], { type: real });
+    throw new Error(`第 ${n} 张图片打不开（${file.name || '未命名'}）。换一张试试，或者截图后传截图`);
   }
 
   let width = img.width;
