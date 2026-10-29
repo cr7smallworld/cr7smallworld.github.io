@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>珍贵资料库 · CR7的小世界</title>
+  <meta name="description" content="照片、杂志、视频……考古党的宝藏">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/board.css">
+</head>
+<body data-section="archive">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="honors.html">荣誉与数据</a></li>
+        <li><a href="fun.html">有趣事件</a></li>
+        <li><a href="relations.html">人物关系</a></li>
+        <li><a href="archive.html">珍贵资料库</a></li>
+        <li><a href="fanworks.html">精彩二创</a></li>
+        <li><a href="index.html#community">社区共建</a></li>
+        <li><a href="index.html#about">关于</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="board-header">
+    <div class="board-header-inner">
+      <span class="board-icon">📷</span>
+      <h1>珍贵资料库</h1>
+      <p>照片、杂志、视频……考古党的宝藏</p>
+      <a class="board-cta" data-submit-link href="submit.html">＋ 我要投稿</a>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <label class="search-box"><input type="search" id="fSearch" placeholder="搜关键词，比如 采访、发型、庆祝" aria-label="搜索"></label>
+      <select id="fClub" aria-label="按俱乐部筛选"><option value="">全部时期</option></select>
+      <select id="fYear" aria-label="按年份筛选"><option value="">全部年份</option></select>
+      <button type="button" class="sort-btn" id="fSort">最新在前 ↓</button>
+      <button type="button" class="clear-btn" id="clearBtn" hidden>清空筛选</button>
+    </div>
+    <div class="tag-row" id="tagRow" hidden></div>
+  </div>
+
+  <main class="board-main">
+    <p class="result-count" id="resultCount"></p>
+    <div class="board-state" id="loading"><p class="loading-dots">正在翻箱倒柜</p></div>
+    <div class="board-state" id="loadError" hidden>
+      <p class="big">📡</p><h2>加载失败了</h2><p>网络不太好，刷新一下试试</p>
+    </div>
+    <div class="board-state" id="empty" hidden>
+      <p class="big">📷</p><h2>资料库还空着</h2><p>翻出了老照片、旧杂志、采访视频？交给小世界保管</p>
+      <a class="board-cta" data-submit-link href="submit.html">＋ 做第一个投稿的人</a>
+    </div>
+    <div class="board-state" id="noMatch" hidden>
+      <p class="big">🔍</p><h2>没找到符合条件的</h2><p>换个关键词或者清空筛选看看</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button type="button" class="modal-close" id="modalClose" aria-label="关闭">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script type="module" src="js/board.js"></script>
+</body>
+</html>

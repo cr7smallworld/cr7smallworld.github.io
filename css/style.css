@@ -425,3 +425,8 @@ body {
   .stat-item { padding: 16px 8px; }
   .stat-num { font-size: 1.6rem; }
 }
+.nav-links a.active {
+  color: var(--sea);
+  background: var(--sea-light);
+  font-weight: 500;
+}

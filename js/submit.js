@@ -49,10 +49,22 @@ function setKind(k) {
   $('summaryLabel').innerHTML = `${cfg.summaryLabel} <em>必填</em>`;
   $('summary').placeholder = cfg.summaryPlaceholder;
   $('detail').placeholder = kind === 'upload' ? '' : (kind === 'supplement' ? '想补充的内容' : '正确的应该是什么，最好附上出处');
-  history.replaceState(null, '', `?kind=${kind}`);
+  const p = new URLSearchParams(location.search);
+  p.set('kind', kind);
+  history.replaceState(null, '', `?${p}`);
 }
 document.querySelectorAll('.kind-tab').forEach((t) => t.addEventListener('click', () => setKind(t.dataset.kind)));
 setKind(new URLSearchParams(location.search).get('kind'));
+
+// 从板块页点"我要投稿"进来，自动选好板块
+{
+  const sec = new URLSearchParams(location.search).get('section');
+  const sel = document.getElementById('section');
+  if (sec && [...sel.options].some((o) => o.value === sec)) {
+    sel.value = sec;
+    document.getElementById('fanworksConsent').hidden = sec !== 'fanworks';
+  }
+}
 
 // ---------- 预设标签 ----------
 PRESET_TAGS.forEach((tag) => {

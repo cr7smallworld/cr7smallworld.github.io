@@ -1,0 +1,115 @@
+@import url('board.css');
+
+.honors-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.big-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.big-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 12px;
+  background: #fff;
+  border: 1px solid rgba(107, 163, 190, 0.18);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.big-stat.hero-stat {
+  grid-column: 1 / -1;
+  padding: 32px 12px;
+  background: linear-gradient(135deg, var(--sun-light), #fff 70%);
+  border-color: rgba(212, 168, 71, 0.35);
+}
+
+.big-stat .num {
+  font-family: 'Lora', serif;
+  font-size: 2.6rem;
+  font-weight: 600;
+  color: var(--sun);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.big-stat.hero-stat .num { font-size: 4.2rem; }
+.big-stat .label { font-size: 0.88rem; color: var(--text); }
+.big-stat .sub { margin-top: 6px; font-size: 0.8rem; color: var(--text-light); }
+
+.honor-block {
+  background: #fff;
+  border: 1px solid rgba(107, 163, 190, 0.18);
+  border-radius: var(--radius-md);
+  padding: 22px 22px 18px;
+  margin-bottom: 18px;
+}
+
+.honor-block h2 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--dark);
+  margin-bottom: 14px;
+}
+
+.year-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.year-chips span {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--sun);
+  padding: 8px 18px;
+  background: var(--sun-light);
+  border-radius: 999px;
+}
+
+.honor-list { list-style: none; }
+
+.honor-list li {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px dashed rgba(107, 163, 190, 0.25);
+}
+.honor-list li:last-child { border-bottom: none; }
+
+.honor-list b {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  color: var(--sea);
+  min-width: 48px;
+}
+
+.league-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.league {
+  padding: 14px 16px;
+  background: var(--cloud);
+  border-radius: var(--radius-sm);
+}
+
+.league h3 { font-size: 0.9rem; font-weight: 500; color: var(--dark); margin-bottom: 8px; }
+.league p { font-family: 'Lora', serif; color: var(--sea); font-weight: 600; font-size: 0.95rem; }
+
+@media (max-width: 768px) {
+  .honors-main { padding: 28px 14px 60px; }
+  .big-stats { gap: 10px; }
+  .big-stat { padding: 18px 6px; }
+  .big-stat .num { font-size: 2rem; }
+  .big-stat.hero-stat .num { font-size: 3.2rem; }
+  .big-stat .label { font-size: 0.78rem; }
+  .honor-block { padding: 18px 16px 14px; }
+}

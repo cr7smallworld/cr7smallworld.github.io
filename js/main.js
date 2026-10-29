@@ -25,3 +25,8 @@ if (nav) {
     }
   });
 }
+// 导航里标出当前所在的页面
+const here = location.pathname.split('/').pop() || 'index.html';
+document.querySelectorAll('.nav-links a').forEach((a) => {
+  if (a.getAttribute('href') === here) a.classList.add('active');
+});
