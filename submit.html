@@ -6,10 +6,10 @@
   <title>投稿 · CR7的小世界</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/polish.css">
   <link rel="stylesheet" href="css/submit.css">
+  <link rel="stylesheet" href="css/polish.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -38,9 +38,9 @@
     <div class="submit-inner">
 
       <div class="kind-tabs" role="tablist">
-        <button type="button" class="kind-tab" data-kind="upload">📤 我要上传</button>
-        <button type="button" class="kind-tab" data-kind="supplement">📝 我要补充</button>
-        <button type="button" class="kind-tab" data-kind="correction">🔧 我要纠错</button>
+        <button type="button" class="kind-tab" data-kind="upload">我要上传</button>
+        <button type="button" class="kind-tab" data-kind="supplement">我要补充</button>
+        <button type="button" class="kind-tab" data-kind="correction">我要纠错</button>
       </div>
 
       <p class="kind-desc" id="kindDesc"></p>
@@ -124,7 +124,7 @@
       </form>
 
       <div class="done" id="done" hidden>
-        <p class="done-icon">❤️</p>
+        <span class="state-mark big" aria-hidden="true"></span>
         <h2>收到啦，谢谢你！</h2>
         <p>审核通过后就会出现在小世界里</p>
         <div class="done-code">

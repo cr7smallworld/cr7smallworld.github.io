@@ -109,7 +109,7 @@ function render() {
   const box = $('list');
   box.innerHTML = '';
   if (!list.length) {
-    box.append(el('p', 'admin-empty', state.status === 'pending' ? '没有待审核的投稿 🎉' : '这里还是空的'));
+    box.append(el('p', 'admin-empty', state.status === 'pending' ? '没有待审核的投稿' : '这里还是空的'));
     return;
   }
   list.forEach((it) => box.append(card(it)));

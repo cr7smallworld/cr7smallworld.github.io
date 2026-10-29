@@ -7,10 +7,10 @@
   <meta name="description" content="记录一些可爱瞬间，认识一个更真实的他">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/polish.css">
   <link rel="stylesheet" href="css/board.css">
+  <link rel="stylesheet" href="css/polish.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body data-section="fun">
@@ -37,7 +37,7 @@
 
   <header class="board-header">
     <div class="board-header-inner">
-      <span class="board-icon">✨</span>
+      <span class="kicker">No.03</span>
       <h1>有趣事件 &amp; 性格萌点</h1>
       <p>记录一些可爱瞬间，认识一个更真实的他</p>
       <a class="board-cta" data-submit-link href="submit.html">＋ 我要投稿</a>
@@ -59,14 +59,14 @@
     <p class="result-count" id="resultCount"></p>
     <div class="board-state" id="loading"><p class="loading-dots">正在翻箱倒柜</p></div>
     <div class="board-state" id="loadError" hidden>
-      <p class="big">📡</p><h2>加载失败了</h2><p>网络不太好，刷新一下试试</p>
+      <span class="state-mark" aria-hidden="true"></span><h2>加载失败了</h2><p>网络不太好，刷新一下试试</p>
     </div>
     <div class="board-state" id="empty" hidden>
-      <p class="big">✨</p><h2>还没有萌点被收录</h2><p>见过他哪个可爱瞬间？投一条，让更多人看到</p>
+      <span class="state-mark" aria-hidden="true"></span><h2>还没有萌点被收录</h2><p>见过他哪个可爱瞬间？投一条，让更多人看到</p>
       <a class="board-cta" data-submit-link href="submit.html">＋ 做第一个投稿的人</a>
     </div>
     <div class="board-state" id="noMatch" hidden>
-      <p class="big">🔍</p><h2>没找到符合条件的</h2><p>换个关键词或者清空筛选看看</p>
+      <span class="state-mark" aria-hidden="true"></span><h2>没找到符合条件的</h2><p>换个关键词或者清空筛选看看</p>
     </div>
     <div class="grid" id="grid"></div>
   </main>

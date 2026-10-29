@@ -7,10 +7,10 @@
   <meta name="description" content="查看自己的投稿审核进度">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/polish.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/polish.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -37,7 +37,6 @@
 
   <header class="board-header">
     <div class="board-header-inner">
-      <span class="board-icon">📬</span>
       <h1>我的投稿</h1>
       <p>看看自己交的投稿审核到哪一步了</p>
     </div>
@@ -54,7 +53,7 @@
 
     <p class="board-state" id="loading" hidden><span class="loading-dots">正在查</span></p>
     <div class="board-state" id="empty" hidden>
-      <p class="big">📭</p><h2>还没有投稿记录</h2><p>在这台设备上投稿以后，这里就能看到审核进度</p>
+      <span class="state-mark" aria-hidden="true"></span><h2>还没有投稿记录</h2><p>在这台设备上投稿以后，这里就能看到审核进度</p>
       <a class="board-cta" href="community.html">去投稿</a>
     </div>
     <div id="list"></div>

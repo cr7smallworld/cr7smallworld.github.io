@@ -36,7 +36,7 @@ for i, (key, name, events) in enumerate(ERAS):
       <div class="era-intro">
         <h2>{name}</h2>
         <span class="era-span">{YEARS.get(key, '')}</span>
-        <p class="era-count">收录 {len(events)} 个时刻 · 金色圆点是高光</p>
+        <p class="era-count">收录 {len(events)} 个时刻</p>
       </div>
       <div class="timeline">
         <div class="timeline-line"></div>

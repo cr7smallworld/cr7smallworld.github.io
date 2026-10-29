@@ -18,10 +18,6 @@ function showEra(era, scroll) {
 
 tabs.forEach((tab) => tab.addEventListener('click', () => showEra(tab.dataset.era, true)));
 
-// 从首页点某个时期进来，直接打开那一页
-const start = new URLSearchParams(location.search).get('era');
-if (start) showEra(start, false);
-
 // 全部展开 / 全部收起
 const toggleAll = document.getElementById('toggleAll');
 function activeCards() {
@@ -44,3 +40,7 @@ if (toggleAll) {
   });
   updateToggleAll();
 }
+
+// 从首页点某个时期进来，直接打开那一页
+const start = new URLSearchParams(location.search).get('era');
+if (start) showEra(start, false);
