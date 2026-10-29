@@ -32,3 +32,60 @@
   .page-main { padding: 28px 14px 60px; }
   .info-block { padding: 18px 16px; }
 }
+
+/* === 我的投稿 === */
+.mine-entry { margin: 0 0 24px; }
+.mine-tip { font-size: 0.88rem; color: var(--text-light); margin-bottom: 14px; }
+
+.mine-add { display: flex; gap: 8px; }
+.mine-add input {
+  flex: 1;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.9rem;
+  border: 1px solid #D5DEE6;
+  border-radius: 999px;
+}
+.mine-add input:focus { outline: none; border-color: var(--sea); }
+.mine-add button {
+  padding: 9px 18px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: #fff;
+  background: var(--sea);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mine-add-msg { min-height: 1.4em; font-size: 0.82rem; color: #C0392B; margin: 6px 0 14px; }
+
+.mine-card {
+  background: #fff;
+  border: 1px solid rgba(107, 163, 190, 0.2);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.mine-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 0.78rem; color: var(--text-light); margin-bottom: 6px; }
+.mine-head .badge, .mine-head .kind, .mine-head .sec { padding: 2px 9px; border-radius: 999px; }
+.mine-head .badge.pending { color: #8A6D1E; background: var(--sun-light); }
+.mine-head .badge.approved { color: #fff; background: var(--green); }
+.mine-head .badge.rejected { color: #fff; background: #B5544A; }
+.mine-head .kind { color: var(--sea); background: var(--sea-light); }
+.mine-head .sec { background: var(--cloud); }
+.mine-head .when { margin-left: auto; }
+
+.mine-title { font-size: 1rem; font-weight: 500; color: var(--dark); margin-bottom: 8px; }
+.mine-note { font-size: 0.9rem; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--cloud); color: var(--text-light); }
+.mine-note.approved { background: #E6F0E8; color: #2F5A3B; }
+.mine-note.rejected { background: #F6E3E0; color: #8A3A31; }
+.mine-note.gone { color: var(--text-light); }
+.mine-note b { font-weight: 500; margin-right: 4px; }
+.mine-when { font-size: 0.75rem; color: var(--text-light); margin-top: 6px; }
+.mine-link { display: inline-block; margin-top: 8px; font-size: 0.85rem; color: var(--sea); }
+.mine-code { font-size: 0.7rem; color: var(--text-light); opacity: 0.6; margin-top: 8px; word-break: break-all; }
+.mine-error { text-align: center; color: #C0392B; padding: 30px 0; }
+
+@media (max-width: 768px) {
+  .mine-head .when { margin-left: 0; width: 100%; }
+}

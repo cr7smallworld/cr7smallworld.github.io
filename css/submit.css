@@ -252,3 +252,36 @@
   cursor: pointer;
 }
 .field[hidden] { display: none; }
+
+.done-code {
+  margin: 22px auto 0;
+  max-width: 460px;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--cloud);
+  border-radius: var(--radius-sm);
+}
+.done-code p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px; }
+.done-code code {
+  display: block;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  word-break: break-all;
+  color: var(--dark);
+  background: #fff;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  user-select: all;
+}
+.done-code button {
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--sea);
+  background: var(--sea-light);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.done-actions a.more-link, .done-actions button.more-link { margin: 0; }
+.done-actions { flex-wrap: wrap; }

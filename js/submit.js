@@ -255,6 +255,23 @@ function collectTags() {
 
 const clean = (v) => (v.trim() === '' ? null : v.trim());
 
+// 查询码：投稿人凭它看审核结果，只记在自己设备上
+function newToken() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+function rememberToken(token, summary) {
+  const KEY = 'cr7_my_submissions';
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(KEY)) || []; } catch (_) {}
+  list.unshift({ token, summary: summary.slice(0, 60), at: new Date().toISOString() });
+  try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, 50))); } catch (_) {}
+}
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const section = $('section').value;
@@ -273,7 +290,9 @@ form.addEventListener('submit', async (e) => {
   try {
     const image_paths = files.length ? await uploadImages() : [];
     showMsg('正在提交…');
+    const token = newToken();
     const { error } = await supabase.from('submissions').insert({
+      token,
       kind,
       section,
       summary,
@@ -287,6 +306,8 @@ form.addEventListener('submit', async (e) => {
       target_id: target && kind !== 'upload' ? target.id : null,
     });
     if (error) throw new Error(error.message);
+    rememberToken(token, summary);
+    $('doneCode').textContent = token;
     form.hidden = true;
     $('done').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -308,4 +329,10 @@ $('again').addEventListener('click', () => {
   showMsg('');
   $('done').hidden = true;
   form.hidden = false;
+});
+
+$('copyCode').addEventListener('click', async () => {
+  const code = $('doneCode').textContent;
+  try { await navigator.clipboard.writeText(code); $('copyCode').textContent = '已复制 ✓'; }
+  catch (_) { prompt('长按复制查询码', code); }
 });
