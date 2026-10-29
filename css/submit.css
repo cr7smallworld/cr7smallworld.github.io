@@ -307,3 +307,8 @@
 .rel-opt.active { border-color: var(--sun); background: #FFFCF5; }
 .rel-opt.active b::before { content: '✓ '; color: var(--sun); }
 @media (max-width: 480px) { .rel-mode { grid-template-columns: 1fr; } }
+
+/* --- 给站长留言 --- */
+.fb-head { margin-bottom: 18px; }
+.fb-head h1 { font-family: var(--serif, serif); font-size: 1.5rem; font-weight: 700; color: var(--dark); letter-spacing: 0.04em; margin-bottom: 6px; }
+.fb-head p { font-size: 0.88rem; line-height: 1.8; color: var(--text-light); }

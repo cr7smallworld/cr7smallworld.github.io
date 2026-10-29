@@ -185,3 +185,20 @@
   .admin-tools { width: 100%; }
   .admin-tools select { flex: 1; }
 }
+
+/* 投稿审核 / 留言 切换 */
+.view-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.view-tabs button {
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  background: #fff;
+  border: 1px solid rgba(30, 42, 56, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.view-tabs button.active { color: #fff; background: var(--dark); border-color: var(--dark); }
+.view-tabs button b { margin-left: 4px; padding: 0 7px; font-size: 0.75rem; color: #fff; background: #B5544A; border-radius: 999px; }
+.view-tabs button b[hidden] { display: none; }
+.fb-msg { white-space: pre-line; }

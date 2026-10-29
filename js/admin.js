@@ -57,6 +57,7 @@ async function enter() {
   $('loginForm').hidden = true;
   $('panel').hidden = false;
   load();
+  loadFb();
 }
 
 $('logoutBtn').addEventListener('click', async () => {
@@ -239,6 +240,105 @@ async function remove(it, buttons) {
   state.all = state.all.filter((x) => !gone.has(x.id));
   msg('panelMsg', '已删除', 'ok');
   render();
+}
+
+// ================= 留言 =================
+const FB_CATS = { suggestion: '建议', problem: '发现问题', other: '其他' };
+const fb = { all: [], tab: 'unread' };
+
+document.querySelectorAll('#viewTabs button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#viewTabs button').forEach((x) => x.classList.toggle('active', x === b));
+  $('subView').hidden = b.dataset.view !== 'sub';
+  $('fbView').hidden = b.dataset.view !== 'fb';
+}));
+document.querySelectorAll('#fbTabs button').forEach((b) => b.addEventListener('click', () => {
+  fb.tab = b.dataset.fb;
+  document.querySelectorAll('#fbTabs button').forEach((x) => x.classList.toggle('active', x === b));
+  renderFb();
+}));
+$('fbRefresh').addEventListener('click', loadFb);
+
+async function loadFb() {
+  msg('fbPanelMsg', '加载中…');
+  const { data, error } = await supabase
+    .from('feedback')
+    .select('id, created_at, category, message, nickname, status, reply, replied_at')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) return msg('fbPanelMsg', '加载失败：' + error.message, 'error');
+  fb.all = data || [];
+  msg('fbPanelMsg', '');
+  renderFb();
+}
+
+function renderFb() {
+  const unread = fb.all.filter((x) => x.status === 'unread').length;
+  $('cFbUnread').textContent = unread;
+  $('cFbUnread').hidden = unread === 0;
+  $('cFbU').textContent = unread;
+  $('cFbR').textContent = fb.all.length - unread;
+  $('cFbA').textContent = fb.all.length;
+  const list = fb.all.filter((x) => fb.tab === 'all' || x.status === fb.tab);
+  const box = $('fbList');
+  box.innerHTML = '';
+  if (!list.length) { box.append(el('p', 'admin-empty', fb.tab === 'unread' ? '没有未读留言' : '这里还是空的')); return; }
+  list.forEach((it) => box.append(fbCard(it)));
+}
+
+function fbCard(it) {
+  const c = el('article', 'a-card');
+  const head = el('div', 'a-head');
+  head.append(
+    el('span', 'badge ' + (it.status === 'unread' ? 'pending' : 'approved'), it.status === 'unread' ? '未读' : '已读'),
+    el('span', 'kind', FB_CATS[it.category] || '其他'),
+    el('span', 'a-sec', it.nickname || '匿名'),
+    el('span', 'a-time', fmt(it.created_at)),
+  );
+  c.append(head);
+  c.append(el('p', 'a-detail fb-msg', it.message));
+  if (it.replied_at) c.append(el('p', 'a-reviewed', `${fmt(it.replied_at)} 回复过`));
+
+  const act = el('div', 'a-actions');
+  const note = el('textarea');
+  note.rows = 2;
+  note.maxLength = 1000;
+  note.placeholder = '回复（选填，留言的人在"我的投稿"里能看到）';
+  note.value = it.reply || '';
+  const btns = el('div', 'a-btns');
+  const send = el('button', 'a-ok', it.reply ? '更新回复' : '回复');
+  const read = el('button', 'a-no', it.status === 'unread' ? '标为已读' : '标为未读');
+  const del = el('button', 'a-del', '删除');
+  [send, read, del].forEach((b) => (b.type = 'button'));
+  const all = [send, read, del];
+  send.addEventListener('click', () => {
+    const text = note.value.trim();
+    fbUpdate(it, { reply: text || null, replied_at: text ? new Date().toISOString() : null, status: 'read' }, all, text ? '已回复' : '已清空回复');
+  });
+  read.addEventListener('click', () => fbUpdate(it, { status: it.status === 'unread' ? 'read' : 'unread' }, all, '已更新'));
+  del.addEventListener('click', async () => {
+    if (!confirm('确定删除这条留言吗？删了就找不回来了')) return;
+    all.forEach((b) => (b.disabled = true));
+    const { error } = await supabase.from('feedback').delete().eq('id', it.id);
+    all.forEach((b) => (b.disabled = false));
+    if (error) return msg('fbPanelMsg', '删除失败：' + error.message, 'error');
+    fb.all = fb.all.filter((x) => x.id !== it.id);
+    msg('fbPanelMsg', '已删除', 'ok');
+    renderFb();
+  });
+  btns.append(send, read, del);
+  act.append(note, btns);
+  c.append(act);
+  return c;
+}
+
+async function fbUpdate(it, patch, buttons, done) {
+  buttons.forEach((b) => (b.disabled = true));
+  const { error } = await supabase.from('feedback').update(patch).eq('id', it.id);
+  buttons.forEach((b) => (b.disabled = false));
+  if (error) return msg('fbPanelMsg', '操作失败：' + error.message, 'error');
+  Object.assign(it, patch);
+  msg('fbPanelMsg', done, 'ok');
+  renderFb();
 }
 
 start();

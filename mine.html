@@ -38,12 +38,12 @@
   <header class="board-header">
     <div class="board-header-inner">
       <h1>我的投稿</h1>
-      <p>看看自己交的投稿审核到哪一步了</p>
+      <p>看看自己交的投稿审核到哪一步了，还有站长给你的留言回复</p>
     </div>
   </header>
 
   <main class="page-main">
-    <p class="mine-tip">在这台手机/电脑上交过的投稿会自动记在这里。换了设备的话，把投稿完成时给你的查询码粘到下面就能找回来。</p>
+    <p class="mine-tip">在这台手机/电脑上交过的投稿和留言会自动记在这里。换了设备的话，把投稿完成时给你的查询码粘到下面就能找回来。</p>
 
     <form class="mine-add" id="addForm">
       <input type="text" id="codeInput" placeholder="粘贴查询码" aria-label="查询码" autocomplete="off">
@@ -53,10 +53,15 @@
 
     <p class="board-state" id="loading" hidden><span class="loading-dots">正在查</span></p>
     <div class="board-state" id="empty" hidden>
-      <span class="state-mark" aria-hidden="true"></span><h2>还没有投稿记录</h2><p>在这台设备上投稿以后，这里就能看到审核进度</p>
+      <span class="state-mark" aria-hidden="true"></span><h2>还没有投稿和留言记录</h2><p>在这台设备上投稿以后，这里就能看到审核进度</p>
       <a class="board-cta" href="community.html">去投稿</a>
     </div>
+    <h2 class="mine-sec" id="subTitle" hidden>我的投稿</h2>
     <div id="list"></div>
+    <section id="fbSection" hidden>
+      <h2 class="mine-sec">我给站长的留言</h2>
+      <div id="fbList"></div>
+    </section>
   </main>
 
   <footer class="footer">

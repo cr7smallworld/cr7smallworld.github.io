@@ -33,6 +33,11 @@
     </form>
 
     <div id="panel" hidden>
+      <div class="view-tabs" id="viewTabs">
+        <button type="button" data-view="sub" class="active">投稿审核</button>
+        <button type="button" data-view="fb">留言 <b id="cFbUnread">0</b></button>
+      </div>
+      <div id="subView">
       <div class="admin-bar">
         <div class="status-tabs" id="statusTabs">
           <button type="button" data-status="pending" class="active">待审核 <b id="cPending">0</b></button>
@@ -54,6 +59,22 @@
       </div>
       <p class="admin-msg" id="panelMsg" role="status"></p>
       <div id="list"></div>
+      </div>
+
+      <div id="fbView" hidden>
+        <div class="admin-bar">
+          <div class="status-tabs" id="fbTabs">
+            <button type="button" data-fb="unread" class="active">未读 <b id="cFbU">0</b></button>
+            <button type="button" data-fb="read">已读 <b id="cFbR">0</b></button>
+            <button type="button" data-fb="all">全部 <b id="cFbA">0</b></button>
+          </div>
+          <div class="admin-tools">
+            <button type="button" id="fbRefresh">刷新</button>
+          </div>
+        </div>
+        <p class="admin-msg" id="fbPanelMsg" role="status"></p>
+        <div id="fbList"></div>
+      </div>
     </div>
 
   </main>

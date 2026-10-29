@@ -3,6 +3,8 @@ const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const STORE = 'cr7_my_submissions';
+const FB_STORE = 'cr7_my_feedback';
+const FB_CATS = { suggestion: '建议', problem: '发现问题', other: '其他' };
 const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错', person: '添加人物' };
 const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
 const STATUS_NAMES = { pending: '审核中', approved: '已通过 ✓', rejected: '未通过' };
@@ -23,12 +25,60 @@ function readStore() {
 function writeStore(list) {
   localStorage.setItem(STORE, JSON.stringify(list.slice(0, 50)));
 }
+function readFb() {
+  try { return JSON.parse(localStorage.getItem(FB_STORE)) || []; } catch (_) { return []; }
+}
+function writeFb(list) {
+  localStorage.setItem(FB_STORE, JSON.stringify(list.slice(0, 50)));
+}
+
+// ---------- 给站长的留言 ----------
+async function loadFeedback() {
+  const saved = readFb();
+  const box = $('fbList');
+  box.innerHTML = '';
+  $('fbSection').hidden = saved.length === 0;
+  if (!saved.length) return;
+  const { data, error } = await supabase.rpc('check_feedback', { p_tokens: saved.map((x) => x.token) });
+  if (error) { box.append(el('p', 'mine-error', '留言查询失败了，刷新一下试试')); return; }
+  const byToken = Object.fromEntries((data || []).map((x) => [x.token, x]));
+  saved.forEach((s) => {
+    const it = byToken[s.token];
+    const c = el('article', 'mine-card');
+    if (!it) {
+      c.append(el('p', 'mine-head', fmt(s.at)));
+      c.append(el('h3', 'mine-title', s.summary || '（未知）'));
+      c.append(el('p', 'mine-note gone', '这条留言已经被站长删除了'));
+      box.append(c);
+      return;
+    }
+    const head = el('div', 'mine-head');
+    const st = it.reply ? ['approved', '站长回复了'] : (it.status === 'read' ? ['pending', '站长已读'] : ['pending', '还没看到']);
+    head.append(
+      el('span', 'badge ' + st[0], st[1]),
+      el('span', 'kind', FB_CATS[it.category] || '留言'),
+      el('span', 'when', '留言于 ' + fmt(it.created_at)),
+    );
+    c.append(head);
+    c.append(el('p', 'mine-title fb-text', it.message));
+    if (it.reply) {
+      const note = el('p', 'mine-note approved');
+      note.append(el('b', null, '站长回复：'), document.createTextNode(it.reply));
+      c.append(note);
+      if (it.replied_at) c.append(el('p', 'mine-when', '回复于 ' + fmt(it.replied_at)));
+    }
+    c.append(el('p', 'mine-code', '查询码：' + s.token));
+    box.append(c);
+  });
+}
 
 async function load() {
   const saved = readStore();
   const box = $('list');
   box.innerHTML = '';
-  $('empty').hidden = saved.length > 0;
+  loadFeedback();
+  $('empty').hidden = saved.length > 0 || readFb().length > 0;
+  $('subTitle').hidden = saved.length === 0;
   if (!saved.length) return;
 
   $('loading').hidden = false;
@@ -80,17 +130,27 @@ async function load() {
 }
 
 // 换了浏览器/手机：粘贴查询码找回
-$('addForm').addEventListener('submit', (e) => {
+$('addForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const token = $('codeInput').value.trim();
   if (!UUID_RE.test(token)) {
     $('addMsg').textContent = '查询码格式不对，要完整复制那一长串';
     return;
   }
-  const list = readStore();
-  if (!list.some((x) => x.token === token)) {
-    list.unshift({ token, summary: '', at: new Date().toISOString() });
-    writeStore(list);
+  $('addMsg').textContent = '正在找…';
+  const [{ data: sub }, { data: fb }] = await Promise.all([
+    supabase.rpc('check_submissions', { p_tokens: [token] }),
+    supabase.rpc('check_feedback', { p_tokens: [token] }),
+  ]);
+  if (fb && fb.length) {
+    const list = readFb();
+    if (!list.some((x) => x.token === token)) { list.unshift({ token, summary: '', at: new Date().toISOString() }); writeFb(list); }
+  } else if (sub && sub.length) {
+    const list = readStore();
+    if (!list.some((x) => x.token === token)) { list.unshift({ token, summary: '', at: new Date().toISOString() }); writeStore(list); }
+  } else {
+    $('addMsg').textContent = '没找到这个查询码，检查一下有没有复制完整';
+    return;
   }
   $('codeInput').value = '';
   $('addMsg').textContent = '';
