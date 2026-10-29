@@ -1,9 +1,9 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+// Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
 
 // 公开钥匙：本来就是写在网页里给所有人看的，权限只够"投稿"和"看审核通过的内容"
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const BUCKET = 'submissions';
 const MAX_IMAGES = 9;

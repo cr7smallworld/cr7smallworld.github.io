@@ -1,9 +1,9 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+// Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
 
 // 公开钥匙：只能读"审核通过"的投稿
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const BUCKET = 'submissions';
 
 const CLUBS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
