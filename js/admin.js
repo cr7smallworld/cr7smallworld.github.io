@@ -233,7 +233,19 @@ function wantsCover(it) {
 
 async function fetchCover(it) {
   const { data, error } = await supabase.functions.invoke('fetch-cover', { body: { id: it.id } });
-  if (error) return { fail: '拿封面出错了，可以等会儿点"重新拿封面"再试' };
+  if (error) {
+    // 把函数返回的具体原因读出来，方便查是哪一步出的错
+    let why = error.message || '';
+    try {
+      const res = error.context;
+      if (res && typeof res.text === 'function') {
+        const t = await res.text();
+        try { const j = JSON.parse(t); why = j.error || j.message || j.msg || t; } catch (_) { why = t || why; }
+        if (res.status) why = `${res.status} ${why}`;
+      }
+    } catch (_) {}
+    return { fail: `拿封面出错了（${String(why).slice(0, 120)}），可以等会儿点"重新拿封面"再试` };
+  }
   if (data && data.path) { it.image_paths = [data.path]; return { ok: true }; }
   return { fail: (data && data.skipped) || '没拿到封面' };
 }
