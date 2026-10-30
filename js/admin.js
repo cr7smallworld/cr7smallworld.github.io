@@ -168,7 +168,7 @@ function card(it) {
   row('原作者', it.fanwork_author);
   row('一句话身份', it.person_role);
   row('花名/CP名', it.person_alias);
-  row(it.kind === 'person' ? '时期' : '事件时间', it.kind === 'person' ? (it.tags || []).join('、') || '其他' : it.event_date);
+  row(it.kind === 'person' ? '分组' : '事件时间', it.kind === 'person' ? (it.tags || []).join('、') || '其它' : it.event_date);
   row('出处', it.source);
   row('上传人', it.uploader || '匿名');
   if (it.kind !== 'person') row('标签', (it.tags || []).map((t) => '#' + t).join(' '));
@@ -235,7 +235,7 @@ function card(it) {
 // ---------- 纠错/补充：站长对照着直接改原条目 ----------
 const FIX_FIELDS = {
   person: [['summary', '名字', 'input'], ['person_role', '一句话身份', 'input'], ['person_alias', '花名/CP名', 'input'],
-    ['tags', '时期（用逗号隔开）', 'tags'], ['detail', '简略介绍', 'textarea']],
+    ['tags', '分组（逗号隔开：俱乐部/葡萄牙/对手/亲人/其它）', 'tags'], ['detail', '简略介绍', 'textarea']],
   upload: [['summary', '一句话介绍', 'input'], ['event_date', '事件时间', 'input'], ['detail', '详细介绍', 'textarea'],
     ['source', '出处', 'input'], ['video_url', '链接', 'input'], ['tags', '标签（用逗号隔开）', 'tags']],
   fanworks: [['summary', '一句话介绍', 'input'], ['fanwork_type', '作品分类', 'fwtype'], ['fanwork_platform', '来源平台', 'input'],

@@ -17,7 +17,9 @@ const GROUPS = [
   ['抬二', '曼联 · 抬二', '2021 – 2022'],
   ['沙特', '利雅得胜利', '2023 – 至今'],
   ['葡萄牙', '葡萄牙国家队', '2003 – 至今'],
-  ['其他', '其他', '家人、对手和更多的人'],
+  ['对手', '对手', '球场上的老对手'],
+  ['亲人', '亲人', '咪的家人'],
+  ['其它', '其它', '更多的人'],
 ];
 const GROUP_KEYS = GROUPS.map((g) => g[0]);
 
@@ -37,7 +39,7 @@ const yearOf = (s) => { const m = (s || '').match(/(19|20)\d{2}/); return m ? Nu
 const aliases = (p) => (p.person_alias || '').split(/[,，、/／\s]+/).map((x) => x.trim()).filter(Boolean);
 const clubsOf = (p) => {
   const c = (p.tags || []).filter((t) => GROUP_KEYS.includes(t));
-  return c.length ? c : ['其他'];
+  return c.length ? c : ['其它'];
 };
 
 // ---------- 读取 ----------
@@ -219,10 +221,10 @@ function fillPanel(panel, p) {
     al.forEach((a) => r.append(el('span', null, a)));
     info.append(r);
   }
-  const clubs = clubsOf(p).filter((c) => c !== '其他');
+  const clubs = clubsOf(p).filter((c) => c !== '其它');
   if (clubs.length) {
     const r = el('p', 'pp-clubs');
-    r.append(el('b', null, '交集'));
+    r.append(el('b', null, '分组'));
     clubs.forEach((c) => r.append(el('span', null, GROUPS.find((g) => g[0] === c)[1])));
     info.append(r);
   }

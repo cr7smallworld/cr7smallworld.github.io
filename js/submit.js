@@ -42,8 +42,8 @@ let relMode = 'moment';  // 人物关系板块上传时：moment=糖点经历，
 let people = null;       // 已收录的人物（选"是谁"用），用到时才去读
 
 const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '其它'];
-const CLUB_TAGS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
-const CLUB_LABELS = { '里斯本竞技': '里斯本竞技', '抬一': '曼联·抬一', '皇马': '皇马', '尤文': '尤文', '抬二': '曼联·抬二', '沙特': '利雅得胜利', '葡萄牙': '葡萄牙国家队' };
+const CLUB_TAGS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙', '对手', '亲人', '其它'];
+const CLUB_LABELS = { '里斯本竞技': '里斯本竞技', '抬一': '曼联·抬一', '皇马': '皇马', '尤文': '尤文', '抬二': '曼联·抬二', '沙特': '利雅得胜利', '葡萄牙': '葡萄牙国家队', '对手': '对手', '亲人': '亲人', '其它': '其它' };
 
 const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
 
@@ -261,11 +261,10 @@ async function loadPeople() {
   const sel = $('personPick');
   if (error) { $('personPickHint').textContent = '人物名单加载失败了，刷新一下试试'; return; }
   people = data || [];
-  const groups = [...CLUB_TAGS, '其他'];
-  groups.forEach((g) => {
+  CLUB_TAGS.forEach((g) => {
     const list = people.filter((p) => {
       const cs = (p.tags || []).filter((t) => CLUB_TAGS.includes(t));
-      return g === '其他' ? cs.length === 0 : cs.includes(g);
+      return g === '其它' ? (cs.length === 0 || cs.includes('其它')) : cs.includes(g);
     });
     if (!list.length) return;
     const og = document.createElement('optgroup');
