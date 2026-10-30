@@ -41,7 +41,10 @@ $('fbForm').addEventListener('submit', async (e) => {
   const token = newToken();
   const { error } = await supabase.from('feedback').insert({ token, category, message, nickname });
   $('fbBtn').disabled = false;
-  if (error) return showMsg('发送失败了：' + error.message + '。可以稍后再试一次', 'error');
+  if (error) {
+    const net = /failed to fetch|networkerror|load failed|timeout/i.test(error.message || '');
+    return showMsg(net ? '网络好像断了一下，换个网络或者换个浏览器再点一次发送试试，写的内容都还在' : '发送失败了：' + error.message + '。可以稍后再试一次', 'error');
+  }
 
   remember(token, message);
   showMsg('');

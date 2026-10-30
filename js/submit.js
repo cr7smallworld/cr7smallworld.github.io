@@ -474,6 +474,36 @@ async function compress(file, n) {
   return blob;
 }
 
+// 网络抖一下就会 Failed to fetch，自动重试几次
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function isNetworkError(e) {
+  const m = String((e && e.message) || e || '');
+  return /failed to fetch|networkerror|load failed|network request failed|timeout|timed out|aborted/i.test(m);
+}
+function friendly(err) {
+  return isNetworkError(err)
+    ? '网络好像断了一下。换个网络（WiFi和流量切一下）或者换个浏览器，再点一次提交试试，填的内容都还在'
+    : '提交失败了：' + err.message + '。可以稍后再试一次';
+}
+async function uploadWithRetry(path, blob, n, total) {
+  const tries = 3;
+  for (let t = 1; t <= tries; t++) {
+    let error;
+    try {
+      ({ error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: blob.type }));
+    } catch (e) { error = e; }
+    if (!error) return;
+    // 上一次其实传上去了只是回信丢了，再传会提示已存在，当成功
+    if (t > 1 && /exists|duplicate/i.test(error.message || '')) return;
+    if (!isNetworkError(error) || t === tries) {
+      const e = new Error(isNetworkError(error) ? 'Failed to fetch' : '图片上传失败：' + error.message);
+      throw e;
+    }
+    showMsg(`第 ${n}/${total} 张图片网络不太稳，正在重试（${t}/${tries - 1}）…`);
+    await sleep(1500 * t);
+  }
+}
+
 async function uploadImages() {
   const paths = [];
   const folder = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}`;
@@ -483,8 +513,7 @@ async function uploadImages() {
     if (blob.size > 1024 * 1024) throw new Error(`第 ${i + 1} 张图片太大了（超过1MB）`);
     const ext = { 'image/gif': 'gif', 'image/png': 'png', 'image/webp': 'webp' }[blob.type] || 'jpg';
     const path = `${folder}/${i + 1}.${ext}`;
-    const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: blob.type });
-    if (error) throw new Error('图片上传失败：' + error.message);
+    await uploadWithRetry(path, blob, i + 1, files.length);
     paths.push(path);
   }
   return paths;
@@ -595,7 +624,7 @@ form.addEventListener('submit', async (e) => {
     $('done').hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (err) {
-    showMsg('提交失败了：' + err.message + '。可以稍后再试一次', 'error');
+    showMsg(friendly(err), 'error');
   } finally {
     btn.disabled = false;
   }
@@ -761,7 +790,7 @@ async function submitEdit() {
     done.hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (err) {
-    showMsg('提交失败了：' + err.message + '。可以稍后再试一次', 'error');
+    showMsg(friendly(err), 'error');
   } finally {
     btn.disabled = false;
   }
