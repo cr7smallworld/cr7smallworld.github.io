@@ -8,10 +8,9 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const BUCKET = 'submissions';
 
 const CLUBS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
-const SPICY = SECTION === 'spicy';
-const SPICY_CATS = ['西装杀', '肌肉暴击', '球场名场面', '训练日常', '其它'];
 
 const SECTION = document.body.dataset.section;
+const SPICY = SECTION === 'spicy';
 // 精彩二创：没有事件时间，年份筛选换成按作品分类筛选
 const FW = SECTION === 'fanworks';
 const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '其它'];
@@ -36,11 +35,9 @@ function linkText(url, short) {
 const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 
 // 二创卡片顶上那一行：分类小牌子
-function spicyLine(it) {
-  const p = el('p', 'card-date fw-type');
-  p.textContent = it.fanwork_type || '🦌';
-  return p;
-}
+// 🦌管素材没配字时 summary 存的是 🦌，不显示标题
+const NO_CAPTION = '🦌';
+const caption = (it) => (SPICY && it.summary === NO_CAPTION ? '' : it.summary);
 
 function fwLine(it) {
   const p = el('p', 'card-date fw-type');
@@ -81,10 +78,12 @@ async function load() {
 // ---------- 筛选项 ----------
 function buildFilters() {
   const yearSel = $('fYear');
-  if (FW || SPICY) {
-    yearSel.setAttribute('aria-label', '按分类筛选');
+  if (SPICY) {
+    // 🦌管素材不分类
+  } else if (FW) {
+    yearSel.setAttribute('aria-label', '按作品分类筛选');
     yearSel.options[0].textContent = '全部分类';
-    (SPICY ? SPICY_CATS : FW_TYPES).forEach((t) => yearSel.append(new Option(t, t)));
+    FW_TYPES.forEach((t) => yearSel.append(new Option(t, t)));
   } else {
     const years = [...new Set(state.all.map(yearOf).filter(Boolean))].sort((a, b) => b - a);
     years.forEach((y) => yearSel.append(new Option(y + '年', y)));
@@ -114,7 +113,7 @@ function syncTagButtons() {
 
 function matches(it) {
   if (state.club && !(it.tags || []).includes(state.club)) return false;
-  if (state.year && ((FW || SPICY) ? it.fanwork_type !== state.year : yearOf(it) !== state.year)) return false;
+  if (state.year && (FW ? it.fanwork_type !== state.year : yearOf(it) !== state.year)) return false;
   if (state.tag && !(it.tags || []).includes(state.tag)) return false;
   if (state.q) {
     const hay = [it.summary, it.detail, it.source, it.event_date, it.uploader, it.fanwork_type, it.fanwork_platform, it.fanwork_author, ...(it.tags || [])].join(' ').toLowerCase();
@@ -164,8 +163,8 @@ function card(it) {
     c.append(el('div', 'card-video', linkText(it.video_url, true)));
   }
   const body = el('div', 'card-body');
-  body.append(FW ? fwLine(it) : SPICY ? spicyLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
-  body.append(el('h3', 'card-title', it.summary));
+  if (!SPICY) body.append(FW ? fwLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
+  if (caption(it)) body.append(el('h3', 'card-title', caption(it)));
   if (it.detail) body.append(el('p', 'card-excerpt', it.detail));
   const tags = el('div', 'card-tags');
   (it.tags || []).slice(0, 4).forEach((t) => tags.append(el('span', 'card-tag' + (CLUBS.includes(t) ? ' club' : ''), '#' + t)));
@@ -184,8 +183,8 @@ function card(it) {
 function openDetail(it) {
   const box = $('modalBody');
   box.innerHTML = '';
-  box.append(FW ? fwLine(it) : SPICY ? spicyLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
-  box.append(el('h2', 'm-title', it.summary));
+  if (!SPICY) box.append(FW ? fwLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
+  if (caption(it)) box.append(el('h2', 'm-title', caption(it)));
 
   if (it.image_paths && it.image_paths.length) {
     const gal = el('div', 'm-gallery' + (it.image_paths.length === 1 ? ' single' : ''));
@@ -232,7 +231,7 @@ function openDetail(it) {
   // 分享
   const share = el('div', 'm-share');
   const link = `${location.origin}${location.pathname}?id=${it.id}`;
-  const text = `【CR7的小世界】${it.summary}`;
+  const text = `【CR7的小世界】${caption(it) || '🦌管素材'}`;
   const wb = el('a', 'share-btn', '分享到微博');
   wb.href = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(link)}&title=${encodeURIComponent(text)}`;
   wb.target = '_blank';

@@ -114,17 +114,17 @@
           <div class="preview" id="preview"></div>
         </div>
 
-        <div class="field not-person">
+        <div class="field not-person not-spicy">
           <label for="videoUrl" id="videoLabel">视频链接 <span class="opt">选填</span></label>
           <input type="url" id="videoUrl" maxlength="500" placeholder="B站、微博、YouTube 等视频地址">
         </div>
 
-        <div class="field not-person not-fw">
+        <div class="field not-person not-fw not-spicy">
           <label for="eventDate">事件发生时间 <span class="opt">选填，不填显示"未知"</span></label>
           <input type="text" id="eventDate" maxlength="50" placeholder="例如 2008年5月21日 / 2017年夏天">
         </div>
 
-        <div class="field">
+        <div class="field not-spicy plain">
           <label for="detail" id="detailLabel">详细介绍 <span class="opt">选填</span></label>
           <textarea id="detail" rows="6" maxlength="3000"></textarea>
           <span class="hint"><span id="detailCount">0</span>/3000</span>
@@ -146,12 +146,12 @@
           <input type="text" id="fwAuthor" maxlength="60" placeholder="原作者在这个平台上的昵称">
         </div>
 
-        <div class="field not-fw">
+        <div class="field not-fw not-spicy">
           <label for="source">出处 <span class="opt">选填，不填显示"未知"</span></label>
           <input type="text" id="source" maxlength="300" placeholder="原视频、原帖、杂志名称等">
         </div>
 
-        <div class="field not-person">
+        <div class="field not-person not-spicy">
           <label>标签 <span class="opt">选填</span></label>
           <div class="tag-picker" id="tagPicker"></div>
           <input type="text" id="customTags" maxlength="100" placeholder="自定义标签，用逗号或空格隔开">
@@ -207,6 +207,6 @@
 
   <script src="js/main.js?v=20261030a"></script>
   <script src="js/vendor/supabase.js"></script>
-  <script type="module" src="js/submit.js?v=20261031a"></script>
+  <script type="module" src="js/submit.js?v=20261031b"></script>
 </body>
 </html>

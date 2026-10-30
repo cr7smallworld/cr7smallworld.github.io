@@ -230,9 +230,23 @@ function updateFw() {
   const spicy = $('section').value === 'spicy';
   $('videoLabel').innerHTML = (fw ? '视频/帖子链接' : arc ? '视频/资料链接' : '视频链接') + ' <span class="opt">选填</span>';
   $('videoUrl').placeholder = fw ? '原作品的视频或帖子地址' : arc ? '视频地址，或者网盘分享链接（书、杂志、PDF放网盘）' : 'B站、微博、YouTube 等视频地址';
-  // 🦌管素材：隐藏不需要的字段，只留标题+图片+分类
-  document.querySelectorAll('.not-spicy').forEach((n) => (n.hidden = spicy));
-  $('spicyCat').hidden = !spicy;
+  // 🦌管素材：只留图片、配字、上传人
+  document.querySelectorAll('.not-spicy').forEach((n) => {
+    if (spicy) n.hidden = true;
+    else if (n.classList.contains('plain')) n.hidden = false;
+  });
+  if (kind === 'upload' && !target) {
+    if (spicy) {
+      $('summaryLabel').innerHTML = '配字 <span class="opt">选填</span>';
+      $('summary').placeholder = '想说点什么就写，不写也行';
+      $('imagesLabel').innerHTML = '上传图片 <em>必填</em> <span class="opt">最多9张</span>';
+    } else if (!isRelUpload()) {
+      $('summaryLabel').innerHTML = `${KINDS.upload.summaryLabel} <em>必填</em>`;
+      $('summary').placeholder = KINDS.upload.summaryPlaceholder;
+      $('imagesLabel').innerHTML = '上传图片 <span class="opt">选填，最多9张</span>';
+    }
+  }
+  $('summary').required = !spicy;
 }
 
 FW_TYPES.forEach((t) => {
@@ -566,7 +580,9 @@ form.addEventListener('submit', async (e) => {
   const personId = relMoment ? $('personPick').value : '';
   if (!section) return showMsg('请选择投稿板块', 'error');
   if (relMoment && !personId) return showMsg('请选一下是谁和他之间的事', 'error');
-  if (!summary) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
+  const spicyUpload = kind === 'upload' && section === 'spicy';
+  if (spicyUpload && !files.length) return showMsg('🦌管素材要传至少一张图', 'error');
+  if (!summary && !spicyUpload) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
   if (target && kind !== 'upload' && !$('detail').value.trim()) {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
   }
@@ -575,10 +591,7 @@ form.addEventListener('submit', async (e) => {
   const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
   const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
   const fwAuthor = $('fwAuthor').value.trim();
-  const spicyUpload = kind === 'upload' && section === 'spicy';
-  const spicyType = spicyUpload ? (form.querySelector('input[name="spicyType"]:checked') || {}).value || '' : '';
   if (fwUpload && !fwType) return showMsg('请选一下作品分类', 'error');
-  if (spicyUpload && !spicyType) return showMsg('请选一下分类', 'error');
   if (fwUpload && !fwPlatform) return showMsg($('fwPlatform').value === '__other' ? '请写一下是哪个平台' : '请选一下来源平台', 'error');
   if (fwUpload && !fwAuthor) return showMsg('请填写原作者昵称', 'error');
   if (fwUpload && !$('consent').checked) return showMsg('二创投稿需要先获得原作者同意', 'error');
@@ -622,7 +635,7 @@ form.addEventListener('submit', async (e) => {
         fanwork_author: fwAuthor,
       });
     }
-    if (spicyUpload) { row.fanwork_type = spicyType; row.event_date = null; row.source = null; row.video_url = null; row.tags = []; }
+    if (spicyUpload) Object.assign(row, { summary: summary || '🦌', detail: null, event_date: null, source: null, video_url: null, tags: [] });
     const { error } = await supabase.from('submissions').insert(row);
     if (error) throw new Error(error.message);
     const who = relMoment ? (people || []).find((p) => p.id === personId) : null;
@@ -716,7 +729,7 @@ async function startEdit(id) {
 
   // 把原来的内容填进去
   const set = (id2, v) => { $(id2).value = v || ''; };
-  set('summary', d.summary); set('eventDate', d.event_date); set('detail', d.detail); set('source', d.source);
+  set('summary', d.section === 'spicy' && d.summary === '🦌' ? '' : d.summary); set('eventDate', d.event_date); set('detail', d.detail); set('source', d.source);
   set('videoUrl', d.video_url); set('uploader', d.uploader);
   set('personRole', d.person_role); set('personAlias', d.person_alias); set('fwAuthor', d.fanwork_author);
   $('summaryCount').textContent = (d.summary || '').length;
@@ -749,7 +762,8 @@ async function submitEdit() {
   const fw = editing.section === 'fanworks' && editing.kind === 'upload';
   const summary = $('summary').value.trim();
   const videoUrl = $('videoUrl').value.trim();
-  if (!summary) return showMsg(person ? '请填写名字' : '请填写一句话介绍', 'error');
+  const spicyEdit = editing.section === 'spicy';
+  if (!summary && !spicyEdit) return showMsg(person ? '请填写名字' : '请填写一句话介绍', 'error');
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('链接要以 http:// 或 https:// 开头', 'error');
   const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
   const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
@@ -764,7 +778,7 @@ async function submitEdit() {
     const image_paths = person ? (added.length ? added : existingPaths).slice(0, 1) : [...existingPaths, ...added].slice(0, MAX_IMAGES);
     showMsg('正在提交修改…');
     const data = {
-      summary,
+      summary: summary || (spicyEdit ? '🦌' : summary),
       event_date: person || fw ? null : clean($('eventDate').value),
       detail: clean($('detail').value),
       source: fw ? null : clean($('source').value),
