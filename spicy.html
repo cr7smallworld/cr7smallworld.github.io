@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦌管素材 · CR7的小世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20261030a">
+  <link rel="stylesheet" href="css/board.css?v=20261030a">
+  <link rel="stylesheet" href="css/polish.css?v=20261031a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
+  <style>
+    .gate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; padding: 40px 20px; }
+    .gate-emoji { font-size: 3rem; margin-bottom: 16px; }
+    .gate h2 { font-family: 'Noto Serif SC', serif; font-size: 1.3rem; margin-bottom: 10px; }
+    .gate p { color: var(--text-light); font-size: 0.88rem; line-height: 1.6; max-width: 360px; margin-bottom: 20px; }
+    .gate-btn { font: inherit; font-size: 1rem; padding: 12px 32px; border: none; border-radius: 999px; background: var(--dark); color: #fff; cursor: pointer; }
+    .gate-btn:hover { background: #2c3e50; }
+  </style>
+</head>
+<body data-section="spicy">
+  <header class="site-header">
+    <a href="index.html" class="site-title">CR7的小世界</a>
+    <nav>
+      <a href="career.html">生涯档案</a>
+      <a href="honors.html">荣誉与数据</a>
+      <a href="fun.html">有趣事件</a>
+      <a href="relations.html">人物关系</a>
+      <a href="archive.html">珍贵资料库</a>
+      <a href="fanworks.html">精彩二创</a>
+      <a href="community.html">社区共建</a>
+      <a href="spicy.html" class="active">🦌管素材</a>
+    </nav>
+  </header>
+
+  <main class="board-page">
+    <div class="gate" id="gate">
+      <p class="gate-emoji">🦌</p>
+      <h2>🦌管素材</h2>
+      <p>这里收录的是让罗蜜心跳加速的帅照、肌肉、名场面。<br>没有真正的 🔞 内容，但可能会引起严重心动。</p>
+      <button class="gate-btn" id="enterBtn">我知道我在看什么，进去</button>
+    </div>
+
+    <div id="content" hidden>
+      <section class="board-hero">
+        <h1>🦌管素材</h1>
+        <p class="board-sub">西装杀 · 肌肉暴击 · 球场名场面 · 训练日常</p>
+        <div class="board-bar">
+          <input type="search" id="fSearch" class="f-search" placeholder="搜索…" aria-label="搜索">
+          <select id="fClub" class="f-select" aria-label="分类"><option value="">全部分类</option></select>
+          <select id="fYear" class="f-select" aria-label="年份"><option value="">全部年份</option></select>
+          <button id="fSort" class="f-sort" type="button">最新在前 ↓</button>
+          <button id="clearBtn" class="f-clear" type="button">清除筛选</button>
+        </div>
+      </section>
+      <div id="loading" class="board-loading"><p>加载中…</p></div>
+      <div id="loadError" class="board-loading" hidden><p>加载失败了，刷新一下试试</p></div>
+      <div id="grid" class="card-grid"></div>
+      <p class="board-empty" id="empty" hidden>还没有内容，<a data-submit-link>来投第一个？</a></p>
+    </div>
+  </main>
+
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button type="button" class="modal-close" id="modalClose" aria-label="关闭">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>CR7的小世界 · 球迷自发搭建的非商业内容合集</p>
+    <p><a href="about.html">关于本站</a></p>
+  </footer>
+
+  <script src="js/main.js?v=20261030a"></script>
+  <script src="js/vendor/supabase.js"></script>
+  <script type="module" src="js/board.js?v=20261031a"></script>
+  <script>
+    const LS = 'cr7_spicy_entered';
+    if (localStorage.getItem(LS)) { document.getElementById('gate').hidden = true; document.getElementById('content').hidden = false; }
+    document.getElementById('enterBtn').addEventListener('click', () => {
+      localStorage.setItem(LS, '1');
+      document.getElementById('gate').hidden = true;
+      document.getElementById('content').hidden = false;
+    });
+  </script>
+</body>
+</html>

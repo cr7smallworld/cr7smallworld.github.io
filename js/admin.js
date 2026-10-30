@@ -4,7 +4,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const BUCKET = 'submissions';
 
 const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错', person: '新人物' };
-const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
+const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
 const STATUS_NAMES = { pending: '待审核', approved: '已通过', rejected: '未通过' };
 
 const $ = (id) => document.getElementById(id);
@@ -611,7 +611,7 @@ start();
 
 // ================= 评论 =================
 const SECTION_NAME = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
-const SECTION_PAGE = { fun: 'fun.html', relations: 'relations.html', archive: 'archive.html', fanworks: 'fanworks.html' };
+const SECTION_PAGE = { fun: 'fun.html', relations: 'relations.html', archive: 'archive.html', fanworks: 'fanworks.html', spicy: 'spicy.html' };
 const cmts = { all: [] };
 const LS_CMT_SEEN = 'cr7_admin_cmt_seen';
 $('cmtRefresh').addEventListener('click', loadCmts);

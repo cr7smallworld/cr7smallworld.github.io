@@ -8,6 +8,8 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const BUCKET = 'submissions';
 
 const CLUBS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙'];
+const SPICY = SECTION === 'spicy';
+const SPICY_CATS = ['西装杀', '肌肉暴击', '球场名场面', '训练日常', '其它'];
 
 const SECTION = document.body.dataset.section;
 // 精彩二创：没有事件时间，年份筛选换成按作品分类筛选
@@ -34,6 +36,12 @@ function linkText(url, short) {
 const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 
 // 二创卡片顶上那一行：分类小牌子
+function spicyLine(it) {
+  const p = el('p', 'card-date fw-type');
+  p.textContent = it.fanwork_type || '🦌';
+  return p;
+}
+
 function fwLine(it) {
   const p = el('p', 'card-date fw-type');
   p.textContent = it.fanwork_type || '二创';
@@ -73,10 +81,10 @@ async function load() {
 // ---------- 筛选项 ----------
 function buildFilters() {
   const yearSel = $('fYear');
-  if (FW) {
-    yearSel.setAttribute('aria-label', '按作品分类筛选');
+  if (FW || SPICY) {
+    yearSel.setAttribute('aria-label', '按分类筛选');
     yearSel.options[0].textContent = '全部分类';
-    FW_TYPES.forEach((t) => yearSel.append(new Option(t, t)));
+    (SPICY ? SPICY_CATS : FW_TYPES).forEach((t) => yearSel.append(new Option(t, t)));
   } else {
     const years = [...new Set(state.all.map(yearOf).filter(Boolean))].sort((a, b) => b - a);
     years.forEach((y) => yearSel.append(new Option(y + '年', y)));
@@ -106,7 +114,7 @@ function syncTagButtons() {
 
 function matches(it) {
   if (state.club && !(it.tags || []).includes(state.club)) return false;
-  if (state.year && (FW ? it.fanwork_type !== state.year : yearOf(it) !== state.year)) return false;
+  if (state.year && ((FW || SPICY) ? it.fanwork_type !== state.year : yearOf(it) !== state.year)) return false;
   if (state.tag && !(it.tags || []).includes(state.tag)) return false;
   if (state.q) {
     const hay = [it.summary, it.detail, it.source, it.event_date, it.uploader, it.fanwork_type, it.fanwork_platform, it.fanwork_author, ...(it.tags || [])].join(' ').toLowerCase();
@@ -117,7 +125,7 @@ function matches(it) {
 
 function sortKey(it) {
   // 有事件年份的按年份排，没有的按投稿时间
-  if (FW) return new Date(it.created_at).getTime();
+  if (FW || SPICY) return new Date(it.created_at).getTime();
   return yearOf(it) ? Number(yearOf(it)) * 1e13 : new Date(it.created_at).getTime() / 1000;
 }
 
@@ -156,7 +164,7 @@ function card(it) {
     c.append(el('div', 'card-video', linkText(it.video_url, true)));
   }
   const body = el('div', 'card-body');
-  body.append(FW ? fwLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
+  body.append(FW ? fwLine(it) : SPICY ? spicyLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
   body.append(el('h3', 'card-title', it.summary));
   if (it.detail) body.append(el('p', 'card-excerpt', it.detail));
   const tags = el('div', 'card-tags');
@@ -176,7 +184,7 @@ function card(it) {
 function openDetail(it) {
   const box = $('modalBody');
   box.innerHTML = '';
-  box.append(FW ? fwLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
+  box.append(FW ? fwLine(it) : SPICY ? spicyLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
   box.append(el('h2', 'm-title', it.summary));
 
   if (it.image_paths && it.image_paths.length) {
@@ -210,6 +218,7 @@ function openDetail(it) {
   const meta = el('dl', 'm-meta');
   const rows = FW
     ? [['原作者', it.fanwork_author || '未知'], ['来源平台', it.fanwork_platform || '未知'], ['投稿', it.uploader || '匿名']]
+    : SPICY ? [['投稿', it.uploader || '匿名']]
     : [['出处', it.source || '未知'], ['投稿', it.uploader || '匿名']];
   rows.forEach(([k, val]) => {
     meta.append(el('dt', null, k), el('dd', null, val));

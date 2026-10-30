@@ -45,7 +45,7 @@ const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '其它'];
 const CLUB_TAGS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙', '对手', '亲人', '其它'];
 const CLUB_LABELS = { '里斯本竞技': '里斯本竞技', '抬一': '曼联·抬一', '皇马': '皇马', '尤文': '尤文', '抬二': '曼联·抬二', '沙特': '利雅得胜利', '葡萄牙': '葡萄牙国家队', '对手': '对手', '亲人': '亲人', '其它': '其它' };
 
-const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
+const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
 
 // ---------- 投稿类型 ----------
 function setKind(k) {
@@ -227,8 +227,12 @@ function updateFw() {
     else if (!(n.classList.contains('not-person') && isRelUpload() && relMode === 'person')) n.hidden = false;
   });
   const arc = $('section').value === 'archive';
+  const spicy = $('section').value === 'spicy';
   $('videoLabel').innerHTML = (fw ? '视频/帖子链接' : arc ? '视频/资料链接' : '视频链接') + ' <span class="opt">选填</span>';
   $('videoUrl').placeholder = fw ? '原作品的视频或帖子地址' : arc ? '视频地址，或者网盘分享链接（书、杂志、PDF放网盘）' : 'B站、微博、YouTube 等视频地址';
+  // 🦌管素材：隐藏不需要的字段，只留标题+图片+分类
+  document.querySelectorAll('.not-spicy').forEach((n) => (n.hidden = spicy));
+  $('spicyCat').hidden = !spicy;
 }
 
 FW_TYPES.forEach((t) => {
@@ -571,7 +575,10 @@ form.addEventListener('submit', async (e) => {
   const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
   const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
   const fwAuthor = $('fwAuthor').value.trim();
+  const spicyUpload = kind === 'upload' && section === 'spicy';
+  const spicyType = spicyUpload ? (form.querySelector('input[name="spicyType"]:checked') || {}).value || '' : '';
   if (fwUpload && !fwType) return showMsg('请选一下作品分类', 'error');
+  if (spicyUpload && !spicyType) return showMsg('请选一下分类', 'error');
   if (fwUpload && !fwPlatform) return showMsg($('fwPlatform').value === '__other' ? '请写一下是哪个平台' : '请选一下来源平台', 'error');
   if (fwUpload && !fwAuthor) return showMsg('请填写原作者昵称', 'error');
   if (fwUpload && !$('consent').checked) return showMsg('二创投稿需要先获得原作者同意', 'error');
@@ -615,6 +622,7 @@ form.addEventListener('submit', async (e) => {
         fanwork_author: fwAuthor,
       });
     }
+    if (spicyUpload) { row.fanwork_type = spicyType; row.event_date = null; row.source = null; row.video_url = null; row.tags = []; }
     const { error } = await supabase.from('submissions').insert(row);
     if (error) throw new Error(error.message);
     const who = relMoment ? (people || []).find((p) => p.id === personId) : null;
