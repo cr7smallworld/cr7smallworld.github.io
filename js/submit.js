@@ -226,8 +226,9 @@ function updateFw() {
     if (fw) n.hidden = true;
     else if (!(n.classList.contains('not-person') && isRelUpload() && relMode === 'person')) n.hidden = false;
   });
-  $('videoLabel').innerHTML = fw ? '视频/帖子链接 <span class="opt">选填</span>' : '视频链接 <span class="opt">选填</span>';
-  $('videoUrl').placeholder = fw ? '原作品的视频或帖子地址' : 'B站、微博、YouTube 等视频地址';
+  const arc = $('section').value === 'archive';
+  $('videoLabel').innerHTML = (fw ? '视频/帖子链接' : arc ? '视频/资料链接' : '视频链接') + ' <span class="opt">选填</span>';
+  $('videoUrl').placeholder = fw ? '原作品的视频或帖子地址' : arc ? '视频地址，或者网盘分享链接（书、杂志、PDF放网盘）' : 'B站、微博、YouTube 等视频地址';
 }
 
 FW_TYPES.forEach((t) => {
@@ -566,7 +567,7 @@ form.addEventListener('submit', async (e) => {
   if (target && kind !== 'upload' && !$('detail').value.trim()) {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
   }
-  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('视频链接要以 http:// 或 https:// 开头', 'error');
+  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('链接要以 http:// 或 https:// 开头', 'error');
   const fwUpload = kind === 'upload' && section === 'fanworks';
   const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
   const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
@@ -742,7 +743,7 @@ async function submitEdit() {
   const summary = $('summary').value.trim();
   const videoUrl = $('videoUrl').value.trim();
   if (!summary) return showMsg(person ? '请填写名字' : '请填写一句话介绍', 'error');
-  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('视频链接要以 http:// 或 https:// 开头', 'error');
+  if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('链接要以 http:// 或 https:// 开头', 'error');
   const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
   const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
   const fwAuthor = $('fwAuthor').value.trim();

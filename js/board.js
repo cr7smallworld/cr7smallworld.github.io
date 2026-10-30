@@ -23,6 +23,14 @@ const yearOf = (item) => {
   const m = (item.event_date || '').match(/(19|20)\d{2}/);
   return m ? m[0] : '';
 };
+// 资料库的链接可能是视频也可能是网盘，按网址判断按钮写什么
+const VIDEO_HOST = /(^|\.)(bilibili\.com|b23\.tv|youtube\.com|youtu\.be|douyin\.com|weibo\.com|weibo\.cn|t\.cn|xiaohongshu\.com|xhslink\.com|v\.qq\.com|ixigua\.com|kuaishou\.com|instagram\.com|tiktok\.com|twitter\.com|x\.com)$/i;
+const hostOf = (u) => { try { return new URL(u).hostname; } catch (_) { return ''; } };
+function linkText(url, short) {
+  if (FW) return short ? '▶ 看原作' : '▶ 去看原作';
+  if (SECTION === 'archive' && !VIDEO_HOST.test(hostOf(url))) return short ? '↗ 资料链接' : '↗ 打开链接';
+  return short ? '▶ 视频' : '▶ 去看视频';
+}
 const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 
 // 二创卡片顶上那一行：分类小牌子
@@ -145,7 +153,7 @@ function card(it) {
     if (it.image_paths.length > 1) wrap.append(el('span', 'img-count', `${it.image_paths.length}张`));
     c.append(wrap);
   } else if (safeUrl(it.video_url)) {
-    c.append(el('div', 'card-video', FW ? '▶ 看原作' : '▶ 视频'));
+    c.append(el('div', 'card-video', linkText(it.video_url, true)));
   }
   const body = el('div', 'card-body');
   body.append(FW ? fwLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
@@ -190,7 +198,7 @@ function openDetail(it) {
 
   const v = safeUrl(it.video_url);
   if (v) {
-    const a = el('a', 'm-video', FW ? '▶ 去看原作' : '▶ 去看视频');
+    const a = el('a', 'm-video', linkText(it.video_url, false));
     a.href = v;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
