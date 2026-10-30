@@ -164,7 +164,7 @@
 }
 .a-actions textarea:focus { outline: none; border-color: var(--sea); }
 
-.a-btns { display: flex; gap: 8px; }
+.a-btns { display: flex; flex-wrap: wrap; gap: 8px; }
 .a-btns button {
   padding: 8px 16px;
   font: inherit;
@@ -213,3 +213,17 @@
 .e-new { color: #2F5A3B; background: #E8F2EA; }
 .e-old .a-gallery, .e-new .a-gallery { margin: 0; }
 @media (max-width: 560px) { .e-row { grid-template-columns: 1fr; } }
+
+/* 纠错/补充：对照着改原条目 */
+.a-fix { color: #fff; background: var(--sun); }
+.fix-box { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; padding: 12px; border-radius: var(--radius-md); background: var(--sun-light); }
+@media (min-width: 720px) { .fix-box { grid-template-columns: 1fr 1.6fr; } }
+.fix-h { font-size: 0.78rem; font-weight: 600; color: #8a6a1f; margin-bottom: 6px; }
+.fix-ref { background: #fff; border-radius: var(--radius-sm); padding: 10px; border-left: 3px solid var(--sun); }
+.fix-said { white-space: pre-line; line-height: 1.6; font-size: 0.88rem; }
+.fix-src { font-size: 0.78rem; color: var(--text-light); margin-top: 6px; word-break: break-all; }
+.fix-form { display: flex; flex-direction: column; gap: 8px; }
+.fix-field { display: flex; flex-direction: column; gap: 3px; font-size: 0.78rem; color: var(--text-light); }
+.fix-field input, .fix-field textarea, .fix-field select { font: inherit; font-size: 0.86rem; color: var(--text); padding: 7px 9px; border: 1px solid #dfe5ec; border-radius: var(--radius-sm); background: #fff; }
+.fix-field textarea { resize: vertical; }
+.fix-field input:focus, .fix-field textarea:focus { outline: none; border-color: var(--sun); }

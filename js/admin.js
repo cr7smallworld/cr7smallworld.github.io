@@ -207,6 +207,12 @@ function card(it) {
   no.addEventListener('click', () => review(it, 'rejected', note.value, [ok, no, del]));
   del.addEventListener('click', () => remove(it, [ok, no, del]));
   btns.append(ok, no, del);
+  if ((it.kind === 'correction' || it.kind === 'supplement') && it.target_id && state.targets[it.target_id]) {
+    const fx = el('button', 'a-fix', '去改原条目');
+    fx.type = 'button';
+    fx.addEventListener('click', () => openFix(it, c, note, fx));
+    btns.insertBefore(fx, del);
+  }
   if (it.status === 'approved' && wantsCover(it)) {
     const cv = el('button', 'a-no', '重新拿封面');
     cv.type = 'button';
@@ -224,6 +230,86 @@ function card(it) {
   c.append(act);
 
   return c;
+}
+
+// ---------- 纠错/补充：站长对照着直接改原条目 ----------
+const FIX_FIELDS = {
+  person: [['summary', '名字', 'input'], ['person_role', '一句话身份', 'input'], ['person_alias', '花名/CP名', 'input'],
+    ['tags', '时期（用逗号隔开）', 'tags'], ['detail', '简略介绍', 'textarea']],
+  upload: [['summary', '一句话介绍', 'input'], ['event_date', '事件时间', 'input'], ['detail', '详细介绍', 'textarea'],
+    ['source', '出处', 'input'], ['video_url', '链接', 'input'], ['tags', '标签（用逗号隔开）', 'tags']],
+  fanworks: [['summary', '一句话介绍', 'input'], ['fanwork_type', '作品分类', 'fwtype'], ['fanwork_platform', '来源平台', 'input'],
+    ['fanwork_author', '原作者', 'input'], ['detail', '详细介绍', 'textarea'], ['video_url', '视频/帖子链接', 'input'], ['tags', '标签（用逗号隔开）', 'tags']],
+};
+const LIMITS = { summary: 100, event_date: 50, detail: 3000, source: 300, video_url: 500, person_role: 60, person_alias: 100, fanwork_platform: 30, fanwork_author: 60 };
+
+async function openFix(it, card, note, btn) {
+  const old = card.querySelector('.fix-box');
+  if (old) { old.remove(); btn.textContent = '去改原条目'; return; }
+  btn.disabled = true;
+  const { data: t, error } = await supabase.from('submissions')
+    .select('id, kind, section, summary, event_date, detail, source, tags, video_url, person_role, person_alias, fanwork_type, fanwork_platform, fanwork_author')
+    .eq('id', it.target_id).single();
+  btn.disabled = false;
+  if (error || !t) return msg('panelMsg', '原条目读不到了，可能已经被删了', 'error');
+
+  const fields = t.kind === 'person' ? FIX_FIELDS.person : (t.section === 'fanworks' ? FIX_FIELDS.fanworks : FIX_FIELDS.upload);
+  const box = el('div', 'fix-box');
+  const ref = el('div', 'fix-ref');
+  ref.append(el('p', 'fix-h', `网友的${KIND_NAMES[it.kind]}`));
+  ref.append(el('p', 'fix-said', it.detail || '（没写具体内容）'));
+  if (it.source) ref.append(el('p', 'fix-src', '出处：' + it.source));
+  const form = el('div', 'fix-form');
+  form.append(el('p', 'fix-h', '原条目（改完点保存）'));
+  const inputs = {};
+  fields.forEach(([k, label, type]) => {
+    const lab = el('label', 'fix-field');
+    lab.append(el('span', null, label));
+    let inp;
+    if (type === 'textarea') { inp = el('textarea'); inp.rows = 4; }
+    else if (type === 'fwtype') {
+      inp = el('select');
+      ['混剪', '同人文', '同人图', '修图', '其它'].forEach((o) => inp.append(new Option(o, o)));
+    } else { inp = el('input'); inp.type = 'text'; }
+    if (LIMITS[k]) inp.maxLength = LIMITS[k];
+    inp.value = type === 'tags' ? (t.tags || []).join('，') : (t[k] || '');
+    inputs[k] = { inp, type };
+    lab.append(inp);
+    form.append(lab);
+  });
+  const row = el('div', 'a-btns');
+  const save = el('button', 'a-ok', '保存修改，纠错标为通过');
+  const cancel = el('button', 'a-del', '取消');
+  [save, cancel].forEach((b) => (b.type = 'button'));
+  cancel.addEventListener('click', () => { box.remove(); btn.textContent = '去改原条目'; });
+  save.addEventListener('click', async () => {
+    const patch = {};
+    for (const [k, { inp, type }] of Object.entries(inputs)) {
+      const v = inp.value.trim();
+      if (type === 'tags') patch[k] = [...new Set(v.split(/[,，、\s]+/).map((x) => x.replace(/^#/, '').trim()).filter(Boolean))];
+      else patch[k] = v || null;
+    }
+    if (!patch.summary) return msg('panelMsg', t.kind === 'person' ? '名字不能空' : '一句话介绍不能空', 'error');
+    if (t.section === 'fanworks' && t.kind !== 'person' && (!patch.fanwork_platform || !patch.fanwork_author)) return msg('panelMsg', '二创的来源平台和原作者不能空', 'error');
+    if (patch.video_url && !/^https?:\/\//i.test(patch.video_url)) return msg('panelMsg', '链接要以 http:// 或 https:// 开头', 'error');
+    save.disabled = cancel.disabled = true;
+    const { error: e1 } = await supabase.from('submissions').update(patch).eq('id', t.id);
+    if (e1) { save.disabled = cancel.disabled = false; return msg('panelMsg', '原条目没改成：' + e1.message, 'error'); }
+    const done = { status: 'approved', review_note: note.value.trim() || '已按你说的改好啦，谢谢你', reviewed_at: new Date().toISOString() };
+    const { error: e2 } = await supabase.from('submissions').update(done).eq('id', it.id);
+    if (e2) { save.disabled = cancel.disabled = false; return msg('panelMsg', '原条目改好了，但纠错没标成通过：' + e2.message, 'error'); }
+    Object.assign(it, done);
+    const local = state.all.find((x) => x.id === t.id);
+    if (local) Object.assign(local, patch);
+    state.targets[t.id] = Object.assign(state.targets[t.id] || {}, patch);
+    msg('panelMsg', `原条目「${patch.summary.slice(0, 20)}」改好了，这条${KIND_NAMES[it.kind]}已标为通过`, 'ok');
+    render();
+  });
+  row.append(save, cancel);
+  form.append(row);
+  box.append(ref, form);
+  card.querySelector('.a-actions').after(box);
+  btn.textContent = '收起';
 }
 
 // 没传图、只贴了YouTube链接：通过的时候自动去拿封面
