@@ -505,3 +505,38 @@ body { letter-spacing: 0.01em; }
 
 /* 带 hidden 的元素一律不显示（有的地方 display 写死了会盖掉 hidden） */
 [hidden] { display: none !important; }
+
+/* ---------- 评论区 ---------- */
+.cmt { margin-top: 22px; padding-top: 16px; border-top: 1px solid rgba(212,168,71,.25); font-size: .86rem; color: var(--text); }
+.cmt-head { font-family: 'Noto Serif SC', serif; font-size: 1rem; font-weight: 700; margin: 0 0 10px; color: var(--dark); }
+.cmt-mini { margin-top: 8px; padding-top: 0; border-top: 0; }
+.cmt-mini .cmt-head { font-family: inherit; font-size: .76rem; font-weight: 500; margin: 0; padding: 3px 12px; border: 1px solid rgba(212,168,71,.5); border-radius: 999px; background: transparent; color: #a07e2c; cursor: pointer; }
+.cmt-mini.open .cmt-head { background: var(--sun-light); }
+.cmt-mini .cmt-body { margin-top: 10px; padding: 12px; border-radius: var(--radius-md); background: rgba(245,236,215,.35); }
+.cmt-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.cmt-form textarea, .cmt-form input { width: 100%; box-sizing: border-box; font: inherit; color: inherit; border: 1px solid #dfe5ec; border-radius: var(--radius-sm); padding: 8px 10px; background: #fff; }
+.cmt-form textarea { resize: vertical; min-height: 44px; }
+.cmt-form textarea:focus, .cmt-form input:focus { outline: none; border-color: var(--sun); }
+.cmt-form-row { display: flex; gap: 8px; align-items: center; }
+.cmt-form-row input { flex: 1; min-width: 0; }
+.cmt-send, .cmt-cancel { flex: none; font: inherit; font-size: .8rem; padding: 7px 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.cmt-send { border: 0; background: var(--dark); color: #fff; }
+.cmt-send:disabled { opacity: .5; }
+.cmt-cancel { border: 1px solid #dfe5ec; background: #fff; color: var(--text-light); }
+.cmt-form-reply { margin: 8px 0 4px; }
+.cmt-msg { min-height: 0; margin: 0 0 6px; color: #b5483b; font-size: .78rem; }
+.cmt-msg:empty { display: none; }
+.cmt-empty { color: var(--text-light); font-size: .8rem; margin: 6px 0; }
+.cmt-thread { padding: 10px 0; border-bottom: 1px solid #eef1f4; }
+.cmt-thread:last-child { border-bottom: 0; }
+.cmt-replies { margin: 8px 0 0 14px; padding-left: 12px; border-left: 2px solid var(--sun-light); }
+.cmt-replies .cmt-item + .cmt-item { margin-top: 8px; }
+.cmt-meta { display: flex; gap: 10px; align-items: baseline; margin: 0 0 3px; }
+.cmt-meta b { font-weight: 600; color: var(--dark); font-size: .8rem; }
+.cmt-meta span { color: var(--text-light); font-size: .72rem; }
+.cmt-text { margin: 0; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+.cmt-to { color: #a07e2c; }
+.cmt-act { display: flex; gap: 14px; margin-top: 4px; }
+.cmt-act button { border: 0; background: none; padding: 2px 0; font: inherit; font-size: .74rem; color: var(--text-light); cursor: pointer; }
+.cmt-like.on { color: #c0563f; }
+.cmt-del:hover { color: #b5483b; }

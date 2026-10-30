@@ -59,6 +59,7 @@ async function enter() {
   load();
   loadEdits();
   loadFb();
+  loadCmts();
 }
 
 $('logoutBtn').addEventListener('click', async () => {
@@ -299,6 +300,8 @@ document.querySelectorAll('#viewTabs button').forEach((b) => b.addEventListener(
   $('subView').hidden = b.dataset.view !== 'sub';
   $('editView').hidden = b.dataset.view !== 'edit';
   $('fbView').hidden = b.dataset.view !== 'fb';
+  $('cmtView').hidden = b.dataset.view !== 'cmt';
+  if (b.dataset.view === 'cmt') markCmtSeen();
 }));
 document.querySelectorAll('#fbTabs button').forEach((b) => b.addEventListener('click', () => {
   fb.tab = b.dataset.fb;
@@ -518,3 +521,79 @@ function editCard(e) {
 }
 
 start();
+
+
+// ================= 评论 =================
+const SECTION_NAME = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
+const SECTION_PAGE = { fun: 'fun.html', relations: 'relations.html', archive: 'archive.html', fanworks: 'fanworks.html' };
+const cmts = { all: [] };
+const LS_CMT_SEEN = 'cr7_admin_cmt_seen';
+$('cmtRefresh').addEventListener('click', loadCmts);
+
+function markCmtSeen() {
+  try { localStorage.setItem(LS_CMT_SEEN, new Date().toISOString()); } catch (_) {}
+  $('cCmtNew').hidden = true;
+}
+
+async function loadCmts() {
+  msg('cmtMsg', '加载中…');
+  const { data, error } = await supabase
+    .from('comments')
+    .select('id, created_at, parent_id, reply_to, nickname, content, like_count, target_id, submissions(summary, section, kind)')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) return msg('cmtMsg', '加载失败：' + error.message, 'error');
+  cmts.all = data || [];
+  msg('cmtMsg', '');
+  renderCmts();
+}
+
+function renderCmts() {
+  const seen = localStorage.getItem(LS_CMT_SEEN) || '';
+  const fresh = cmts.all.filter((c) => c.created_at > seen).length;
+  const onTab = !$('cmtView').hidden;
+  $('cCmtNew').textContent = fresh;
+  $('cCmtNew').hidden = fresh === 0 || onTab;
+  if (onTab) markCmtSeen();
+  const box = $('cmtList');
+  box.replaceChildren();
+  if (!cmts.all.length) { box.append(el('p', 'admin-empty', '还没有评论')); return; }
+  cmts.all.forEach((c) => {
+    const card = el('article', 'a-card');
+    const s = c.submissions || {};
+    const head = el('div', 'a-head');
+    if (c.created_at > seen) head.append(el('span', 'badge pending', '新'));
+    head.append(
+      el('span', 'kind', c.parent_id ? '回复' : '评论'),
+      el('span', 'a-sec', c.nickname || '匿名罗蜜'),
+      el('span', 'a-time', fmt(c.created_at)),
+    );
+    card.append(head);
+    const where = el('p', 'a-reviewed');
+    const page = SECTION_PAGE[s.section];
+    const a = el(page ? 'a' : 'span', null, `${SECTION_NAME[s.section] || ''}｜${s.summary || '（内容已删除）'}`);
+    if (page) { a.href = `${page}?id=${c.target_id}`; a.target = '_blank'; a.rel = 'noopener'; }
+    where.append('评论在：', a);
+    card.append(where);
+    const text = (c.reply_to ? `回复 @${c.reply_to}：` : '') + c.content + (c.like_count ? `　♥${c.like_count}` : '');
+    card.append(el('p', 'a-detail fb-msg', text));
+    const act = el('div', 'a-actions');
+    const btns = el('div', 'a-btns');
+    const del = el('button', 'a-del', '删除');
+    del.type = 'button';
+    del.addEventListener('click', async () => {
+      if (!confirm('删掉这条评论？' + (c.parent_id ? '' : '它下面的回复也会一起删掉'))) return;
+      del.disabled = true;
+      const { error } = await supabase.from('comments').delete().eq('id', c.id);
+      del.disabled = false;
+      if (error) return msg('cmtMsg', '删除失败：' + error.message, 'error');
+      cmts.all = cmts.all.filter((x) => x.id !== c.id && x.parent_id !== c.id);
+      msg('cmtMsg', '已删除', 'ok');
+      renderCmts();
+    });
+    btns.append(del);
+    act.append(btns);
+    card.append(act);
+    box.append(card);
+  });
+}

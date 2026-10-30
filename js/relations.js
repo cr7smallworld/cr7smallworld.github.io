@@ -1,6 +1,8 @@
 // 人物关系：按时期分组的人物名单，点开一个人看介绍和糖点经历
 // 人物 = submissions 里 kind='person' 的行；糖点 = kind='upload' 且 person_id 指向这个人
 
+import { mountComments, countComments } from './comments.js?v=20261030h';
+
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -250,6 +252,15 @@ function fillPanel(panel, p) {
   share.addEventListener('click', () => copyLink(share, `?p=${p.id}`, `【CR7的小世界】他和${p.summary}`));
   act.append(add, sup, fix, share);
   panel.append(act);
+
+  // 每条糖点底下一个可展开的小评论区，人物本身一个评论区
+  const slots = Array.from(panel.querySelectorAll('.mm-cmt'));
+  if (slots.length) {
+    countComments(supabase, slots.map((s) => s.dataset.id)).then((counts) => {
+      slots.forEach((s) => mountComments(s, supabase, s.dataset.id, { collapsed: true, count: counts[s.dataset.id] || 0 }));
+    });
+  }
+  mountComments(panel, supabase, p.id);
 }
 
 function moment(m) {
@@ -293,6 +304,9 @@ function moment(m) {
   fix.href = `submit.html?kind=correction&section=relations&target=${m.id}`;
   foot.append(sup, fix);
   li.append(foot);
+  const slot = el('div', 'mm-cmt');
+  slot.dataset.id = m.id;
+  li.append(slot);
   return li;
 }
 

@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=20261030a">
   <link rel="stylesheet" href="css/admin.css?v=20261030f">
-  <link rel="stylesheet" href="css/polish.css?v=20261030f">
+  <link rel="stylesheet" href="css/polish.css?v=20261030h">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -37,6 +37,7 @@
         <button type="button" data-view="sub" class="active">投稿审核</button>
         <button type="button" data-view="edit">修改 <b id="cEdit">0</b></button>
         <button type="button" data-view="fb">留言 <b id="cFbUnread">0</b></button>
+        <button type="button" data-view="cmt">评论 <b id="cCmtNew">0</b></button>
       </div>
       <div id="subView">
       <div class="admin-bar">
@@ -85,11 +86,20 @@
         <p class="admin-msg" id="fbPanelMsg" role="status"></p>
         <div id="fbList"></div>
       </div>
+
+      <div id="cmtView" hidden>
+        <div class="admin-bar">
+          <p class="edit-hint">网友在内容底下发的评论，发了就直接显示。看到不好的点删除，下面的回复会一起删掉</p>
+          <div class="admin-tools"><button type="button" id="cmtRefresh">刷新</button></div>
+        </div>
+        <p class="admin-msg" id="cmtMsg" role="status"></p>
+        <div id="cmtList"></div>
+      </div>
     </div>
 
   </main>
 
   <script src="js/vendor/supabase.js"></script>
-  <script type="module" src="js/admin.js?v=20261030f"></script>
+  <script type="module" src="js/admin.js?v=20261030h"></script>
 </body>
 </html>

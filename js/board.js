@@ -1,4 +1,5 @@
 // Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
+import { mountComments } from './comments.js?v=20261030h';
 
 // 公开钥匙：只能读"审核通过"的投稿
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
@@ -235,6 +236,8 @@ function openDetail(it) {
   fix.href = `submit.html?kind=correction&section=${SECTION}&target=${it.id}`;
   links.append(sup, fix);
   box.append(links);
+
+  mountComments(box, supabase, it.id);
 
   $('modal').hidden = false;
   document.body.classList.add('no-scroll');
