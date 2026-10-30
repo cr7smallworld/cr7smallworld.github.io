@@ -13,51 +13,77 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
   <style>
     .gate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; padding: 40px 20px; }
-    .gate-emoji { font-size: 3rem; margin-bottom: 16px; }
-    .gate h2 { font-family: 'Noto Serif SC', serif; font-size: 1.3rem; margin-bottom: 10px; }
-    .gate p { color: var(--text-light); font-size: 0.88rem; line-height: 1.6; max-width: 360px; margin-bottom: 20px; }
-    .gate-btn { font: inherit; font-size: 1rem; padding: 12px 32px; border: none; border-radius: 999px; background: var(--dark); color: #fff; cursor: pointer; }
-    .gate-btn:hover { background: #2c3e50; }
+    .gate-emoji { font-size: 3.2rem; margin-bottom: 14px; }
+    .gate h2 { font-family: 'Noto Serif SC', serif; font-size: 1.4rem; color: var(--dark); margin-bottom: 22px; }
+    .gate-btn { font: inherit; font-size: 0.95rem; padding: 12px 32px; border: none; border-radius: 999px; background: var(--dark); color: #fff; cursor: pointer; }
+    .gate-btn:hover { opacity: 0.88; }
   </style>
 </head>
 <body data-section="spicy">
-  <header class="site-header">
-    <a href="index.html" class="site-title">CR7的小世界</a>
-    <nav>
-      <a href="career.html">生涯档案</a>
-      <a href="honors.html">荣誉与数据</a>
-      <a href="fun.html">有趣事件</a>
-      <a href="relations.html">人物关系</a>
-      <a href="archive.html">珍贵资料库</a>
-      <a href="fanworks.html">精彩二创</a>
-      <a href="community.html">社区共建</a>
-      <a href="spicy.html" class="active">🦌管素材</a>
-    </nav>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="honors.html">荣誉与数据</a></li>
+        <li><a href="fun.html">有趣事件</a></li>
+        <li><a href="relations.html">人物关系</a></li>
+        <li><a href="archive.html">珍贵资料库</a></li>
+        <li><a href="fanworks.html">精彩二创</a></li>
+        <li><a href="spicy.html">🦌管素材</a></li>
+        <li><a href="community.html">社区共建</a></li>
+        <li><a href="about.html">关于</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="gate" id="gate">
+    <p class="gate-emoji">🦌</p>
+    <h2>🦌管素材</h2>
+    <button type="button" class="gate-btn" id="enterBtn">我知道我在看什么，进去</button>
+  </div>
+
+  <div id="content" hidden>
+  <header class="board-header">
+    <div class="board-header-inner">
+      <span class="kicker">No.🦌</span>
+      <h1>🦌管素材</h1>
+      <a class="board-cta" data-submit-link href="submit.html">＋ 我要投稿</a>
+    </div>
   </header>
 
-  <main class="board-page">
-    <div class="gate" id="gate">
-      <p class="gate-emoji">🦌</p>
-      <h2>🦌管素材</h2>
-      <button class="gate-btn" id="enterBtn">我知道我在看什么，进去</button>
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <label class="search-box"><input type="search" id="fSearch" placeholder="搜配字或者投稿人" aria-label="搜索"></label>
+      <select id="fClub" hidden><option value=""></option></select>
+      <select id="fYear" hidden><option value=""></option></select>
+      <button type="button" class="sort-btn" id="fSort">最新在前 ↓</button>
+      <button type="button" class="clear-btn" id="clearBtn" hidden>清空筛选</button>
     </div>
+    <div class="tag-row" id="tagRow" hidden></div>
+  </div>
 
-    <div id="content" hidden>
-      <section class="board-hero">
-        <h1>🦌管素材</h1>
-        <div class="board-bar">
-          <input type="search" id="fSearch" class="f-search" placeholder="搜索…" aria-label="搜索">
-          <button id="fSort" class="f-sort" type="button">最新在前 ↓</button>
-          <select id="fClub" hidden><option value=""></option></select><select id="fYear" hidden><option value=""></option></select>
-          <button id="clearBtn" class="f-clear" type="button">清除筛选</button>
-        </div>
-      </section>
-      <div id="loading" class="board-loading"><p>加载中…</p></div>
-      <div id="loadError" class="board-loading" hidden><p>加载失败了，刷新一下试试</p></div>
-      <div id="grid" class="card-grid"></div>
-      <p class="board-empty" id="empty" hidden>还没有内容，<a data-submit-link>来投第一个？</a></p>
+  <main class="board-main">
+    <p class="result-count" id="resultCount"></p>
+    <div class="board-state" id="loading"><p class="loading-dots">正在翻箱倒柜</p></div>
+    <div class="board-state" id="loadError" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>加载失败了</h2><p>网络不太好，刷新一下试试</p>
     </div>
+    <div class="board-state" id="empty" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>这里还空着</h2>
+      <a class="board-cta" data-submit-link href="submit.html">＋ 做第一个投稿的人</a>
+    </div>
+    <div class="board-state" id="noMatch" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>没找到符合条件的</h2><p>换个关键词或者清空筛选看看</p>
+    </div>
+    <div class="grid" id="grid"></div>
   </main>
+  </div>
 
   <div class="modal" id="modal" hidden role="dialog" aria-modal="true">
     <div class="modal-box">
@@ -66,22 +92,27 @@
     </div>
   </div>
 
-  <footer class="site-footer">
-    <p>CR7的小世界 · 球迷自发搭建的非商业内容合集</p>
-    <p><a href="about.html">关于本站</a></p>
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="career.html">生涯档案</a><a href="honors.html">荣誉与数据</a><a href="fun.html">有趣事件</a><a href="relations.html">人物关系</a><a href="archive.html">珍贵资料库</a><a href="fanworks.html">精彩二创</a><a href="spicy.html">🦌管素材</a><a href="community.html">社区共建</a><a href="mine.html">我的投稿</a><a href="about.html">关于</a>
+      </nav>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
   </footer>
 
   <script src="js/main.js?v=20261030a"></script>
   <script src="js/vendor/supabase.js"></script>
   <script type="module" src="js/board.js?v=20261031b"></script>
   <script>
-    const LS = 'cr7_spicy_entered';
-    if (localStorage.getItem(LS)) { document.getElementById('gate').hidden = true; document.getElementById('content').hidden = false; }
-    document.getElementById('enterBtn').addEventListener('click', () => {
-      localStorage.setItem(LS, '1');
-      document.getElementById('gate').hidden = true;
-      document.getElementById('content').hidden = false;
-    });
+    (function () {
+      const LS = 'cr7_spicy_entered';
+      const open = () => { document.getElementById('gate').hidden = true; document.getElementById('content').hidden = false; };
+      if (localStorage.getItem(LS)) open();
+      document.getElementById('enterBtn').addEventListener('click', () => { try { localStorage.setItem(LS, '1'); } catch (_) {} open(); });
+    })();
   </script>
 </body>
 </html>
