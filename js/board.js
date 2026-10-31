@@ -1,5 +1,5 @@
 // Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
-import { mountComments } from './comments.js?v=20261030h';
+import { mountComments } from './comments.js?v=20261031c';
 
 // 公开钥匙：只能读"审核通过"的投稿
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';

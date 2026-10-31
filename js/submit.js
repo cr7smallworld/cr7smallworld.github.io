@@ -611,6 +611,7 @@ form.addEventListener('submit', async (e) => {
       source: clean($('source').value),
       tags: collectTags(),
       uploader: clean($('uploader').value),
+      ...memberFields(),
       image_paths,
       video_url: videoUrl || null,
       target_id: target && kind !== 'upload' ? target.id : null,
@@ -822,3 +823,23 @@ async function submitEdit() {
   const id = new URLSearchParams(location.search).get('edit');
   if (id && /^[0-9a-f-]{36}$/i.test(id)) startEdit(id);
 }
+
+
+// ================= 登录了就自动署用户名 =================
+// 只交登录口令，用户名由数据库自己认出来，没法冒充别人；勾了匿名前台显示"匿名"
+function memberFields() {
+  const acct = window.cr7Account;
+  const tk = acct && acct.token();
+  if (!tk || editing) return {};
+  return { member_token: tk, is_anon: $('memberAnon').checked };
+}
+function syncMember() {
+  const acct = window.cr7Account;
+  const name = acct && acct.token() ? acct.username() : null;
+  const on = !!name && !editing;
+  $('memberField').hidden = !on;
+  $('uploaderField').hidden = on;
+  if (on) $('memberName').textContent = name;
+}
+syncMember();
+if (window.cr7Account) window.cr7Account.me().then(syncMember).catch(() => {});

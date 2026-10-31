@@ -72,7 +72,7 @@ async function load() {
   msg('panelMsg', '加载中…');
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, created_at, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, target_id, person_id, person_role, person_alias, fanwork_type, fanwork_platform, fanwork_author, status, review_note, reviewed_at')
+    .select('id, created_at, kind, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url, target_id, person_id, person_role, person_alias, fanwork_type, fanwork_platform, fanwork_author, status, review_note, reviewed_at, member_name, is_anon')
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) return msg('panelMsg', '加载失败：' + error.message, 'error');
@@ -170,7 +170,9 @@ function card(it) {
   row('花名/CP名', it.person_alias);
   row(it.kind === 'person' ? '分组' : '事件时间', it.kind === 'person' ? (it.tags || []).join('、') || '其它' : it.event_date);
   row('出处', it.source);
-  row('上传人', it.uploader || '匿名');
+  row('上传人', it.member_name
+    ? (it.is_anon ? `匿名（账号：${it.member_name}）` : `${it.member_name}（已登录）`)
+    : (it.uploader || '匿名') + '（没登录）');
   if (it.kind !== 'person') row('标签', (it.tags || []).map((t) => '#' + t).join(' '));
   const v = safeUrl(it.video_url);
   if (v) {
@@ -625,7 +627,7 @@ async function loadCmts() {
   msg('cmtMsg', '加载中…');
   const { data, error } = await supabase
     .from('comments')
-    .select('id, created_at, parent_id, reply_to, nickname, content, like_count, target_id, submissions(summary, section, kind)')
+    .select('id, created_at, parent_id, reply_to, nickname, content, like_count, target_id, member_name, is_anon, submissions(summary, section, kind)')
     .order('created_at', { ascending: false })
     .limit(300);
   if (error) return msg('cmtMsg', '加载失败：' + error.message, 'error');
@@ -651,7 +653,7 @@ function renderCmts() {
     if (c.created_at > seen) head.append(el('span', 'badge pending', '新'));
     head.append(
       el('span', 'kind', c.parent_id ? '回复' : '评论'),
-      el('span', 'a-sec', c.nickname || '匿名罗蜜'),
+      el('span', 'a-sec', (c.nickname || '匿名罗蜜') + (c.member_name && c.is_anon ? `（账号：${c.member_name}）` : '')),
       el('span', 'a-time', fmt(c.created_at)),
     );
     card.append(head);

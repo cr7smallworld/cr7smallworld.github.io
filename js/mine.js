@@ -72,7 +72,22 @@ async function loadFeedback() {
   });
 }
 
+// 登录了：换手机也能看到这个账号投过的稿（查询码合并到这台设备）
+async function syncMember() {
+  const acct = window.cr7Account;
+  const tk = acct && acct.token();
+  if (!tk) return;
+  const { data } = await supabase.rpc('member_my_submissions', { p_token: tk });
+  if (!data || !data.length) return;
+  const list = readStore();
+  const have = new Set(list.map((x) => x.token));
+  data.forEach((d) => { if (!have.has(d.token)) list.push({ token: d.token, summary: d.summary, at: d.created_at }); });
+  list.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
+  writeStore(list);
+}
+
 async function load() {
+  try { await syncMember(); } catch (_) {}
   const saved = readStore();
   const box = $('list');
   box.innerHTML = '';

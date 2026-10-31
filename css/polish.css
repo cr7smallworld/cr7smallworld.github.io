@@ -545,3 +545,13 @@ body { letter-spacing: 0.01em; }
 .cmt-act button { border: 0; background: none; padding: 2px 0; font: inherit; font-size: .74rem; color: var(--text-light); cursor: pointer; }
 .cmt-like.on { color: #c0563f; }
 .cmt-del:hover { color: #b5483b; }
+
+/* 登录后的评论署名 / 投稿署名 */
+.cmt-as { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-light); min-width: 0; }
+.cmt-as b { color: var(--dark); font-weight: 500; margin-right: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmt-as input { width: auto !important; margin: 0; }
+.cmt-tip { margin: 6px 0 0; font-size: 0.78rem; color: var(--text-light); }
+.cmt-tip a { color: var(--sun); }
+.member-as { margin: 0 0 8px; font-size: 0.92rem; color: var(--text); }
+.member-as b { color: var(--sun); }
+.acct-tip a { color: var(--sun); }

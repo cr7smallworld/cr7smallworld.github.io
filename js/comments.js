@@ -180,14 +180,24 @@ export function mountComments(container, supabase, targetId, { collapsed = false
     ta.rows = replyTo ? 2 : 3;
     ta.placeholder = replyTo ? `回复 @${replyTo.nickname}` : '说点什么吧（最多500字）';
     const row = el('div', 'cmt-form-row');
+    const acct = window.cr7Account;
+    const member = acct && acct.token() ? acct.username() : null;
     const nick = el('input');
     nick.type = 'text';
     nick.maxLength = 20;
     nick.placeholder = '昵称（不填就是匿名罗蜜）';
     nick.value = localStorage.getItem(LS_NICK) || '';
+    const anonBox = el('input');
+    anonBox.type = 'checkbox';
     const send = el('button', 'cmt-send', replyTo ? '回复' : '发送');
     send.type = 'submit';
-    row.append(nick, send);
+    if (member) {
+      const who = el('label', 'cmt-as');
+      who.append(el('b', null, member), anonBox, document.createTextNode('匿名'));
+      row.append(who, send);
+    } else {
+      row.append(nick, send);
+    }
     if (replyTo) {
       const cancel = el('button', 'cmt-cancel', '取消');
       cancel.type = 'button';
@@ -195,6 +205,14 @@ export function mountComments(container, supabase, targetId, { collapsed = false
       row.append(cancel);
     }
     f.append(ta, row);
+    if (!member && !replyTo) {
+      const tip = el('p', 'cmt-tip');
+      tip.append(document.createTextNode('想用自己的名字评论？'));
+      const a = el('a', null, '登录');
+      a.href = 'login.html?back=' + encodeURIComponent((location.pathname.split('/').pop() || 'index.html') + location.search);
+      tip.append(a);
+      f.append(tip);
+    }
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
       const content = ta.value.trim();
@@ -203,13 +221,15 @@ export function mountComments(container, supabase, targetId, { collapsed = false
       msg.textContent = '';
       const token = uuid();
       const nickname = nick.value.trim();
-      try { localStorage.setItem(LS_NICK, nickname); } catch (_) {}
+      if (!member) { try { localStorage.setItem(LS_NICK, nickname); } catch (_) {} }
       const { data: id, error } = await supabase.rpc('add_comment', {
         p_target: targetId,
         p_parent: replyTo ? replyTo.id : null,
         p_nickname: nickname,
         p_content: content,
         p_token: token,
+        p_member_token: member ? acct.token() : null,
+        p_anon: member ? anonBox.checked : false,
       });
       send.disabled = false;
       if (error) { msg.textContent = niceError(error); return; }
