@@ -17,6 +17,9 @@
     .gate h2 { font-family: 'Noto Serif SC', serif; font-size: 1.4rem; color: var(--dark); margin-bottom: 22px; }
     .gate-btn { font: inherit; font-size: 0.95rem; padding: 12px 32px; border: none; border-radius: 999px; background: var(--dark); color: #fff; cursor: pointer; }
     .gate-btn:hover { opacity: 0.88; }
+    .gate-tip { font-size: 0.95rem; color: var(--dark); line-height: 1.8; margin: -8px 0 22px; max-width: 320px; }
+    .gate-skip { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 0.85rem; color: #888; cursor: pointer; user-select: none; }
+    .gate-skip input { width: 16px; height: 16px; accent-color: var(--dark); cursor: pointer; }
   </style>
 </head>
 <body data-section="spicy">
@@ -45,7 +48,9 @@
   <div class="gate" id="gate">
     <p class="gate-emoji">🦌</p>
     <h2>🦌管素材</h2>
-    <button type="button" class="gate-btn" id="enterBtn">我知道我在看什么，进去</button>
+    <p class="gate-tip">嬷嬷特供，请确认你知道是什么意思再进入</p>
+    <button type="button" class="gate-btn" id="enterBtn">确认</button>
+    <label class="gate-skip"><input type="checkbox" id="gateSkip"> 不再提示</label>
   </div>
 
   <div id="content" hidden>
@@ -108,10 +113,15 @@
   <script type="module" src="js/board.js?v=20261031d"></script>
   <script>
     (function () {
-      const LS = 'cr7_spicy_entered';
-      const open = () => { document.getElementById('gate').hidden = true; document.getElementById('content').hidden = false; };
-      if (localStorage.getItem(LS)) open();
-      document.getElementById('enterBtn').addEventListener('click', () => { try { localStorage.setItem(LS, '1'); } catch (_) {} open(); });
+      const LS = 'cr7_spicy_noprompt';
+      const open = () => { document.getElementById('gate').hidden = true; document.getElementById('content').hidden = false; window.scrollTo(0, 0); };
+      let skip = false;
+      try { skip = localStorage.getItem(LS) === '1'; } catch (_) {}
+      if (skip) open();
+      document.getElementById('enterBtn').addEventListener('click', () => {
+        if (document.getElementById('gateSkip').checked) { try { localStorage.setItem(LS, '1'); } catch (_) {} }
+        open();
+      });
     })();
   </script>
 </body>
