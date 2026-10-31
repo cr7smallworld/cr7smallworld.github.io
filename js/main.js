@@ -264,8 +264,10 @@ window.cr7Who = (name, fallback) => {
   bell.setAttribute('aria-label', '公告');
   var dot = document.createElement('span'); dot.className = 'ann-bell-dot'; dot.hidden = true;
   bell.append(dot);
+  // 🔔插在三横杠左边，导航栏位置不变
   var toggle = navInner.querySelector('.nav-toggle');
-  if (toggle) navInner.insertBefore(bell, toggle); else navInner.append(bell);
+  if (toggle) toggle.parentNode.insertBefore(bell, toggle);
+  else navInner.append(bell);
 
   // 面板
   var panel = document.createElement('div'); panel.className = 'ann-panel'; panel.hidden = true;

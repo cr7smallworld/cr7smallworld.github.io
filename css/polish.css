@@ -590,6 +590,6 @@ body { letter-spacing: 0.01em; }
 .ann-popup-item:last-child { border-bottom: none; }
 .ann-popup-date { flex-shrink: 0; color: #A08C5A; font-variant-numeric: tabular-nums; font-size: 12px; margin-top: 2px; }
 @media (max-width: 768px) {
-  .ann-bell { order: 8; margin-left: auto; margin-right: 8px; }
+  .ann-bell { margin-left: auto; margin-right: 4px; }
   .ann-panel { top: 50px; right: 8px; width: calc(100vw - 16px); }
 }
