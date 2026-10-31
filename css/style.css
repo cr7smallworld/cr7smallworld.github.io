@@ -430,3 +430,17 @@ body {
   background: var(--sea-light);
   font-weight: 500;
 }
+
+/* 导航最右边的账号入口 */
+.nav-links a.nav-account {
+  color: var(--sun);
+  border: 1px solid rgba(212, 168, 71, 0.55);
+  white-space: nowrap;
+  max-width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-links a.nav-account:hover { background: var(--sun-light); color: var(--sun); }
+@media (max-width: 768px) {
+  .nav-links a.nav-account { margin-top: 6px; text-align: center; max-width: none; }
+}
