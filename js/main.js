@@ -245,3 +245,101 @@ window.cr7Who = (name, fallback) => {
   a.addEventListener('click', (e) => e.stopPropagation());
   return a;
 };
+
+// ===== 全站公告🔔 =====
+(function initAnnBell() {
+  var navInner = document.querySelector('.nav-inner');
+  if (!navInner) return;
+  var LS_ANN = 'cr7_announcements';
+  var LS_DISMISSED = 'cr7_ann_dismissed2';
+  function getDismissed() { try { return JSON.parse(localStorage.getItem(LS_DISMISSED) || '[]'); } catch (_) { return []; } }
+  function getAnns() { try { return JSON.parse(localStorage.getItem(LS_ANN) || '[]'); } catch (_) { return []; } }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmtDate(t) { var d = new Date(t); return d.getFullYear() + '.' + pad(d.getMonth()+1) + '.' + pad(d.getDate()); }
+
+  // 🔔按钮
+  var bell = document.createElement('button');
+  bell.className = 'ann-bell'; bell.innerHTML = '🔔'; bell.title = '公告';
+  bell.setAttribute('aria-label', '公告');
+  var dot = document.createElement('span'); dot.className = 'ann-bell-dot'; dot.hidden = true;
+  bell.append(dot);
+  var toggle = navInner.querySelector('.nav-toggle');
+  if (toggle) navInner.insertBefore(bell, toggle); else navInner.append(bell);
+
+  // 面板
+  var panel = document.createElement('div'); panel.className = 'ann-panel'; panel.hidden = true;
+  panel.innerHTML = '<div class="ann-panel-header"><span>\ud83d\udce2 \u7ad9\u957f\u516c\u544a</span><button class="ann-panel-close" aria-label="\u5173\u95ed">&times;</button></div><div class="ann-panel-body"></div>';
+  document.body.append(panel);
+  var overlay = document.createElement('div'); overlay.className = 'ann-overlay'; overlay.hidden = true;
+  document.body.append(overlay);
+
+  function updateDot() {
+    var dismissed = getDismissed(), anns = getAnns();
+    dot.hidden = anns.filter(function(a) { return dismissed.indexOf(a.id) === -1; }).length === 0;
+  }
+  function renderPanel() {
+    var body = panel.querySelector('.ann-panel-body'), anns = getAnns();
+    body.innerHTML = '';
+    if (!anns.length) { body.innerHTML = '<p class="ann-panel-empty">\u6682\u65f6\u6ca1\u6709\u516c\u544a</p>'; return; }
+    anns.forEach(function(a) {
+      var item = document.createElement('div'); item.className = 'ann-panel-item';
+      item.innerHTML = '<div class="ann-panel-date">' + fmtDate(a.created_at) + '</div><div class="ann-panel-text">' + esc(a.content) + '</div>';
+      body.append(item);
+    });
+  }
+  function openPanel() {
+    renderPanel(); panel.hidden = false; overlay.hidden = false;
+    var anns = getAnns(), dismissed = getDismissed();
+    anns.forEach(function(a) { if (dismissed.indexOf(a.id) === -1) dismissed.push(a.id); });
+    try { localStorage.setItem(LS_DISMISSED, JSON.stringify(dismissed)); } catch (_) {}
+    dot.hidden = true;
+  }
+  function closePanel() { panel.hidden = true; overlay.hidden = true; }
+  bell.addEventListener('click', function(e) { e.stopPropagation(); panel.hidden ? openPanel() : closePanel(); });
+  panel.querySelector('.ann-panel-close').addEventListener('click', closePanel);
+  overlay.addEventListener('click', closePanel);
+
+  // 首页弹窗
+  function showPopup(items, dismissed) {
+    var pop = document.createElement('div'); pop.className = 'ann-popup-overlay';
+    var box = document.createElement('div'); box.className = 'ann-popup';
+    box.innerHTML = '<div class="ann-popup-header"><span>\ud83d\udce2 \u7ad9\u957f\u516c\u544a</span><button class="ann-popup-close" aria-label="\u5173\u95ed">&times;</button></div><div class="ann-popup-body"></div>';
+    var bd = box.querySelector('.ann-popup-body');
+    items.forEach(function(a) {
+      var row = document.createElement('div'); row.className = 'ann-popup-item';
+      row.innerHTML = '<span class="ann-popup-date">' + pad(new Date(a.created_at).getMonth()+1) + '.' + pad(new Date(a.created_at).getDate()) + '</span><span>' + esc(a.content) + '</span>';
+      bd.append(row);
+    });
+    pop.append(box); document.body.append(pop);
+    function close() {
+      items.forEach(function(a) { if (dismissed.indexOf(a.id) === -1) dismissed.push(a.id); });
+      try { localStorage.setItem(LS_DISMISSED, JSON.stringify(dismissed)); } catch (_) {}
+      pop.remove(); dot.hidden = true;
+    }
+    box.querySelector('.ann-popup-close').addEventListener('click', close);
+    pop.addEventListener('click', function(e) { if (e.target === pop) close(); });
+  }
+
+  // 如果有supabase，拉公告更新缓存
+  function fetchAnns() {
+    if (!window.supabase || !window.cr7Account) return Promise.resolve();
+    return window.cr7Account.rest('announcements?is_active=eq.true&order=sort_order.desc,created_at.desc&limit=50').then(function(data) {
+      if (!data) return;
+      var list = data.map(function(a) { return { id: a.id, content: a.content, created_at: a.created_at }; });
+      try { localStorage.setItem(LS_ANN, JSON.stringify(list)); } catch (_) {}
+      updateDot();
+      // 首页弹窗
+      var isHome = location.pathname === '/' || location.pathname.endsWith('/index.html') || location.pathname.endsWith('index.html') || location.pathname.split('/').pop() === '' || location.pathname.split('/').pop() === 'index.html';
+      if (isHome) {
+        var dismissed = getDismissed();
+        var unseen = list.filter(function(a) { return dismissed.indexOf(a.id) === -1; });
+        if (unseen.length) showPopup(unseen, dismissed);
+      }
+    }).catch(function() {});
+  }
+
+  updateDot();
+  // 延迟一下等cr7Account初始化完
+  setTimeout(fetchAnns, 800);
+})();
