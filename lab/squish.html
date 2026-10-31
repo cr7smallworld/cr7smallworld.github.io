@@ -41,7 +41,7 @@
   <label><span>软硬 <i>软 ← → 硬</i></span><input type="range" id="soft" min="1" max="10" value="6"></label>
   <label><span>陷多深 <i>浅 ← → 深</i></span><input type="range" id="depth" min="1" max="10" value="6"></label>
   <label><span>抖几下 <i>少 ← → 多</i></span><input type="range" id="wobble" min="1" max="10" value="4"></label>
-  <label><span>手指大小 <i>小 ← → 大</i></span><input type="range" id="size" min="1" max="10" value="4"></label>
+  <label><span>手指大小 <i>小 ← → 大</i></span><input type="range" id="size" min="1" max="10" value="5"></label>
 </section>
 
 <script>
@@ -63,7 +63,7 @@
   if (!gl) { hint.textContent = '这个浏览器不支持捏捏效果（没有 WebGL），换个浏览器试试，比如 Chrome 或者 Edge'; return; }
 
   // ---------- 网格 ----------
-  const N = 80, V = N * N;
+  const N = 64, V = N * N;
   const bx = new Float32Array(V), by = new Float32Array(V);
   const dx = new Float32Array(V), dy = new Float32Array(V);
   const vx = new Float32Array(V), vy = new Float32Array(V);
@@ -75,7 +75,7 @@
     bx[k] = i / (N - 1); by[k] = j / (N - 1);
     uv[k * 2] = bx[k]; uv[k * 2 + 1] = by[k];
   }
-  const idx = new Uint16Array((N - 1) * (N - 1) * 6);   // 80×80 顶点 < 65535，Uint16 够用
+  const idx = new Uint16Array((N - 1) * (N - 1) * 6);
   let t = 0;
   for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
     const a = j * N + i, b = a + 1, c = a + N, d = c + 1;
@@ -200,7 +200,6 @@
     cv.setPointerCapture(e.pointerId);
     const [x, y] = toUv(e);
     fingers.set(e.pointerId, { ax: x, ay: y, x, y, p: 0 });
-    poke(x, y);
   });
   cv.addEventListener('pointermove', (e) => {
     const f = fingers.get(e.pointerId);
@@ -213,33 +212,18 @@
   cv.addEventListener('contextmenu', (e) => e.preventDefault());
 
   const val = (id) => Number(document.getElementById(id).value);
-  const radius = () => 0.015 + val('size') * 0.016;   // 0.031 ~ 0.175
+  const radius = () => 0.07 + val('size') * 0.016;
   const tX = new Float32Array(V), tY = new Float32Array(V), tZ = new Float32Array(V);
-  const give = () => 1.35 - val('soft') * 0.08;       // 越硬越难按动：1.27 ~ 0.55
-  const tipR = () => 0.012 + radius() * 0.1;          // 指尖小坑，比手指范围小得多
-  function poke(x, y) {
-    const T = tipR(), T2 = T * T, g = give();
-    const span = T * 3, G = N - 1;
-    const i0 = Math.max(0, Math.floor((x - span) * G)), i1 = Math.min(G, Math.ceil((x + span) * G));
-    const j0 = Math.max(0, Math.floor((y - span) * G)), j1 = Math.min(G, Math.ceil((y + span) * G));
-    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-      const q = j * N + i;
-      const rx = bx[q] - x, ry = by[q] - y, d2 = (rx * rx + ry * ry) / T2;
-      if (d2 > 9) continue;
-      vz[q] += 0.08 * g * Math.exp(-d2);
-    }
-  }
 
   // ---------- 物理 ----------
   // 不再用"一圈一圈往外传"的波（那样像水），每个点各自用弹簧追目标形状：
   // 整块肉一起陷、一起弹、一起颤
   function step() {
-    const k = 0.035 + val('soft') * 0.028;        // 越硬回得越快：0.063 ~ 0.315
+    const k = 0.035 + val('soft') * 0.022;        // 越硬回得越快
     const damp = 0.5 + val('wobble') * 0.045;     // 越大抖得越久
-    const g = give();
-    const depth = val('depth') * 0.1 * g;
+    const give = 1.35 - val('soft') * 0.07;        // 越软陷得越深、越容易被拖走
+    const depth = val('depth') * 0.1 * give;
     const R = radius(), R2 = R * R;
-    const T = tipR(), T2 = T * T;
     tX.fill(0); tY.fill(0); tZ.fill(0);
 
     fingers.forEach((f) => {
@@ -250,24 +234,18 @@
         f.ax = f.x - ox * lim / len; f.ay = f.y - oy * lim / len;
         ox = f.x - f.ax; oy = f.y - f.ay;
       }
-      const span = R * 3, G = N - 1;
-      const i0 = Math.max(0, Math.floor((f.ax - span) * G)), i1 = Math.min(G, Math.ceil((f.ax + span) * G));
-      const j0 = Math.max(0, Math.floor((f.ay - span) * G)), j1 = Math.min(G, Math.ceil((f.ay + span) * G));
-      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-        const q = j * N + i;
+      for (let q = 0; q < V; q++) {
         const rx = bx[q] - f.ax, ry = by[q] - f.ay;
-        const d2 = rx * rx + ry * ry;
-        const r2 = d2 / R2;
+        const r2 = (rx * rx + ry * ry) / R2;
         if (r2 > 9) continue;
         const r = Math.sqrt(r2);
         const drag = Math.exp(-r2 * 1.1);          // 被抓住的那块跟着走
         const inner = Math.exp(-r2 * 2.6);         // 手指底下陷进去
         const ring = Math.exp(-(r - 1.15) * (r - 1.15) * 5);   // 周围被挤得鼓起来
-        const tip = Math.exp(-d2 / T2);            // 指尖正下方的小凹陷（轻一点）
-        tX[q] += ox * drag * g; tY[q] += oy * drag * g;
-        tZ[q] += f.p * (depth * (inner - 0.4 * ring) + 0.12 * g * tip);
+        tX[q] += ox * drag * give; tY[q] += oy * drag * give;
+        tZ[q] += f.p * depth * (inner - 0.4 * ring);
         if (r > 1e-4) {
-          const m = f.p * depth * (-0.1 * r * inner + 0.06 * ring) / r;
+          const m = f.p * depth * R * (-0.1 * r * inner + 0.06 * ring) / (r * R);
           tX[q] += rx * m; tY[q] += ry * m;
         }
       }
@@ -296,7 +274,7 @@
       // 陷下去的地方暗一点，坑沿朝左上的一面亮一点，鼓起来的地方也亮一点
       const gx = (i > 0 && i < N - 1) ? z[q - 1] - z[q + 1] : 0;
       const gy = (j > 0 && j < N - 1) ? z[q - N] - z[q + N] : 0;
-      const sh = 1 - z[q] * 0.32 - (gx * 0.7 + gy) * (N / 26);
+      const sh = 1 - z[q] * 0.3 - (gx * 0.7 + gy) * 2.2;
       shade[q] = sh < 0.55 ? 0.55 : sh > 1.25 ? 1.25 : sh;
     }
     gl.clearColor(0.078, 0.094, 0.122, 1);
