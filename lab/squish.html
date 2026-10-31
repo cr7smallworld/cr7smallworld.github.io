@@ -38,9 +38,9 @@
   <p id="hint">点右上角"选图"挑一张<br>图片只在这台手机里打开，不会上传到任何地方</p>
 </div>
 <section id="panel">
-  <label><span>软硬 <i>软 ← → 硬</i></span><input type="range" id="soft" min="1" max="10" value="4"></label>
+  <label><span>软硬 <i>软 ← → 硬</i></span><input type="range" id="soft" min="1" max="10" value="6"></label>
   <label><span>陷多深 <i>浅 ← → 深</i></span><input type="range" id="depth" min="1" max="10" value="6"></label>
-  <label><span>抖几下 <i>少 ← → 多</i></span><input type="range" id="wobble" min="1" max="10" value="6"></label>
+  <label><span>抖几下 <i>少 ← → 多</i></span><input type="range" id="wobble" min="1" max="10" value="4"></label>
   <label><span>手指大小 <i>小 ← → 大</i></span><input type="range" id="size" min="1" max="10" value="5"></label>
 </section>
 
@@ -187,6 +187,7 @@
   document.getElementById('reset').addEventListener('click', reset);
 
   // ---------- 手指 ----------
+  // 每根手指记住按下的位置（锚点），肉被"抓住"跟着手指走，拖太远就滑开
   const fingers = new Map();
   const toUv = (e) => {
     const r = cv.getBoundingClientRect();
@@ -198,91 +199,83 @@
     if (!imgAspect) return;
     cv.setPointerCapture(e.pointerId);
     const [x, y] = toUv(e);
-    fingers.set(e.pointerId, { x, y, lx: x, ly: y, held: 0 });
-    poke(x, y, 0.5);             // 刚按下去先"噗"地陷一下
+    fingers.set(e.pointerId, { ax: x, ay: y, x, y, p: 0 });
   });
   cv.addEventListener('pointermove', (e) => {
     const f = fingers.get(e.pointerId);
     if (!f) return;
     [f.x, f.y] = toUv(e);
   });
-  const up = (e) => { const f = fingers.get(e.pointerId); if (f) { poke(f.x, f.y, -0.45); fingers.delete(e.pointerId); } };   // 松手往外弹
+  const up = (e) => { fingers.delete(e.pointerId); };
   cv.addEventListener('pointerup', up);
   cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', (e) => e.preventDefault());
 
   const val = (id) => Number(document.getElementById(id).value);
-  const radius = () => 0.06 + val('size') * 0.018;
-
-  // 给一圈速度（按下时往里，松手时往外弹）
-  function poke(x, y, s) {
-    const R = radius(), R2 = R * R;
-    for (let k = 0; k < V; k++) {
-      const rx = bx[k] + dx[k] - x, ry = by[k] + dy[k] - y, d2 = rx * rx + ry * ry;
-      if (d2 >= R2) continue;
-      const w = 1 - d2 / R2;
-      vz[k] += s * w * w * val('depth') * 0.012;
-    }
-  }
+  const radius = () => 0.07 + val('size') * 0.016;
+  const tX = new Float32Array(V), tY = new Float32Array(V), tZ = new Float32Array(V);
 
   // ---------- 物理 ----------
+  // 不再用"一圈一圈往外传"的波（那样像水），每个点各自用弹簧追目标形状：
+  // 整块肉一起陷、一起弹、一起颤
   function step() {
-    const kSpring = 0.012 + val('soft') * 0.009;
-    const damp = 0.78 + val('wobble') * 0.019;
-    const depth = val('depth') * 0.09;
+    const k = 0.035 + val('soft') * 0.022;        // 越硬回得越快
+    const damp = 0.5 + val('wobble') * 0.045;     // 越大抖得越久
+    const give = 1.35 - val('soft') * 0.07;        // 越软陷得越深、越容易被拖走
+    const depth = val('depth') * 0.1 * give;
     const R = radius(), R2 = R * R;
-    grab.fill(0);
+    tX.fill(0); tY.fill(0); tZ.fill(0);
 
     fingers.forEach((f) => {
-      const mx = f.x - f.lx, my = f.y - f.ly;
-      f.lx = f.x; f.ly = f.y;
-      f.held = Math.min(1, f.held + 0.06);
-      for (let k = 0; k < V; k++) {
-        const px = bx[k] + dx[k], py = by[k] + dy[k];
-        const rx = px - f.x, ry = py - f.y, d2 = rx * rx + ry * ry;
-        if (d2 >= R2) continue;
-        const w0 = 1 - d2 / R2, w = w0 * w0;
-        grab[k] = Math.max(grab[k], w);
-        dx[k] += mx * w * 0.95;            // 肉被手指带着走
-        dy[k] += my * w * 0.95;
-        dx[k] -= rx * w * 0.02 * f.held;   // 往手指底下挤，看着像陷进去
-        dy[k] -= ry * w * 0.02 * f.held;
-        vz[k] += (w * depth * f.held - z[k]) * 0.22;
+      f.p += (1 - f.p) * 0.3;
+      let ox = f.x - f.ax, oy = f.y - f.ay;
+      const len = Math.hypot(ox, oy), lim = R * 0.8;
+      if (len > lim) {                             // 拖太远：手指在皮肤上滑开
+        f.ax = f.x - ox * lim / len; f.ay = f.y - oy * lim / len;
+        ox = f.x - f.ax; oy = f.y - f.ay;
+      }
+      for (let q = 0; q < V; q++) {
+        const rx = bx[q] - f.ax, ry = by[q] - f.ay;
+        const r2 = (rx * rx + ry * ry) / R2;
+        if (r2 > 9) continue;
+        const r = Math.sqrt(r2);
+        const drag = Math.exp(-r2 * 1.1);          // 被抓住的那块跟着走
+        const inner = Math.exp(-r2 * 2.6);         // 手指底下陷进去
+        const ring = Math.exp(-(r - 1.15) * (r - 1.15) * 5);   // 周围被挤得鼓起来
+        tX[q] += ox * drag * give; tY[q] += oy * drag * give;
+        tZ[q] += f.p * depth * (inner - 0.4 * ring);
+        if (r > 1e-4) {
+          const m = f.p * depth * R * (-0.1 * r * inner + 0.06 * ring) / (r * R);
+          tX[q] += rx * m; tY[q] += ry * m;
+        }
       }
     });
 
-    for (let j = 1; j < N - 1; j++) for (let i = 1; i < N - 1; i++) {
-      const k = j * N + i;
-      const lapX = (dx[k - 1] + dx[k + 1] + dx[k - N] + dx[k + N]) * 0.25 - dx[k];
-      const lapY = (dy[k - 1] + dy[k + 1] + dy[k - N] + dy[k + N]) * 0.25 - dy[k];
-      const lapZ = (z[k - 1] + z[k + 1] + z[k - N] + z[k + N]) * 0.25 - z[k];
-      const ks = kSpring * (1 - grab[k] * 0.97);
-      vx[k] = (vx[k] - ks * dx[k] + lapX * 0.3) * damp;
-      vy[k] = (vy[k] - ks * dy[k] + lapY * 0.3) * damp;
-      vz[k] = (vz[k] - kSpring * 1.3 * z[k] * (1 - grab[k]) + lapZ * 0.3) * damp;
-    }
-    for (let k = 0; k < V; k++) {
-      dx[k] += vx[k]; dy[k] += vy[k]; z[k] += vz[k];
-      if (dx[k] > 0.22) dx[k] = 0.22; else if (dx[k] < -0.22) dx[k] = -0.22;
-      if (dy[k] > 0.22) dy[k] = 0.22; else if (dy[k] < -0.22) dy[k] = -0.22;
-      if (z[k] > 1.2) z[k] = 1.2; else if (z[k] < -0.6) z[k] = -0.6;
+    for (let q = 0; q < V; q++) {
+      vx[q] = (vx[q] + (tX[q] - dx[q]) * k) * damp;
+      vy[q] = (vy[q] + (tY[q] - dy[q]) * k) * damp;
+      vz[q] = (vz[q] + (tZ[q] - z[q]) * k) * damp;
+      dx[q] += vx[q]; dy[q] += vy[q]; z[q] += vz[q];
+      if (dx[q] > 0.25) dx[q] = 0.25; else if (dx[q] < -0.25) dx[q] = -0.25;
+      if (dy[q] > 0.25) dy[q] = 0.25; else if (dy[q] < -0.25) dy[q] = -0.25;
+      if (z[q] > 1.5) z[q] = 1.5; else if (z[q] < -1) z[q] = -1;
     }
     // 最外一圈钉住，边上不会露出黑边
     for (let i = 0; i < N; i++) {
-      [i, (N - 1) * N + i, i * N, i * N + N - 1].forEach((k) => { dx[k] = dy[k] = vx[k] = vy[k] = z[k] = vz[k] = 0; });
+      [i, (N - 1) * N + i, i * N, i * N + N - 1].forEach((q) => { dx[q] = dy[q] = vx[q] = vy[q] = z[q] = vz[q] = 0; });
     }
   }
 
   function draw() {
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-      const k = j * N + i;
-      pos[k * 2] = bx[k] + dx[k];
-      pos[k * 2 + 1] = by[k] + dy[k];
-      // 陷下去的地方暗一点，坑边朝光的一面亮一点
-      const gx = (i > 0 && i < N - 1) ? z[k - 1] - z[k + 1] : 0;
-      const gy = (j > 0 && j < N - 1) ? z[k - N] - z[k + N] : 0;
-      let s = 1 - z[k] * 0.32 - (gx + gy) * (N / 9);
-      shade[k] = s < 0.45 ? 0.45 : s > 1.35 ? 1.35 : s;
+      const q = j * N + i;
+      pos[q * 2] = bx[q] + dx[q];
+      pos[q * 2 + 1] = by[q] + dy[q];
+      // 陷下去的地方暗一点，坑沿朝左上的一面亮一点，鼓起来的地方也亮一点
+      const gx = (i > 0 && i < N - 1) ? z[q - 1] - z[q + 1] : 0;
+      const gy = (j > 0 && j < N - 1) ? z[q - N] - z[q + N] : 0;
+      const sh = 1 - z[q] * 0.3 - (gx * 0.7 + gy) * 2.2;
+      shade[q] = sh < 0.55 ? 0.55 : sh > 1.25 ? 1.25 : sh;
     }
     gl.clearColor(0.078, 0.094, 0.122, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
