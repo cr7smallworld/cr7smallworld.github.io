@@ -137,6 +137,29 @@
 .u-notif-time { font-size: 0.75rem; color: var(--text-light); }
 .u-notif-text { font-size: 0.92rem; color: var(--dark); line-height: 1.6; }
 .u-notif-quote { font-size: 0.82rem; color: var(--text-light); padding-left: 10px; border-left: 2px solid #E5E9EE; line-height: 1.6; }
+.u-notif-type.comment { background: var(--sea-light); color: var(--sea); }
+.u-notif-type.like { background: #FDEBF2; color: #C2557A; }
+/* 个人中心·我的投稿 */
+.u-group { margin: 18px 0 4px; font-family: 'Noto Serif SC', serif; font-size: 1rem; color: var(--dark); }
+.u-group:first-child { margin-top: 0; }
+.u-group-tip { margin-bottom: 10px; font-size: 0.78rem; color: var(--text-light); line-height: 1.6; }
+.u-sub { padding: 14px; margin-bottom: 10px; background: #fff; border: 1px solid var(--line, rgba(30,42,56,.08)); border-radius: 12px; }
+.u-sub-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.u-sub-badge { padding: 2px 9px; font-size: 0.74rem; border-radius: 999px; background: var(--sun-light); color: #8A6D1E; }
+.u-sub-badge.approved { background: #E6F2EA; color: var(--green); }
+.u-sub-badge.rejected { background: #FBEAEA; color: #B54A3C; }
+.u-sub-kind, .u-sub-sec { padding: 2px 9px; font-size: 0.74rem; border-radius: 999px; background: var(--cloud); color: var(--text-light); }
+.u-sub-anon { padding: 2px 9px; font-size: 0.74rem; border-radius: 999px; background: #EFEBF6; color: #6B5E8C; }
+.u-sub-time { margin-left: auto; font-size: 0.74rem; color: var(--text-light); }
+.u-sub-title { font-size: 0.96rem; font-weight: 500; color: var(--dark); line-height: 1.6; margin-bottom: 8px; }
+.u-sub-note { font-size: 0.84rem; color: var(--text-light); line-height: 1.7; padding-left: 10px; border-left: 2px solid #E5E9EE; margin-bottom: 6px; }
+.u-sub-note.approved { border-left-color: var(--green); }
+.u-sub-note.rejected { border-left-color: #B54A3C; }
+.u-sub-note.edit { border-left-color: var(--sun); }
+.u-sub-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+.u-sub-link { font-size: 0.84rem; color: var(--sea); text-decoration: none; }
+.u-sub-link.edit { color: var(--sun); font-weight: 500; }
+.u-sub-link:hover { text-decoration: underline; }
 
 /* ---------- 全站搜索 ---------- */
 .g-search { display: flex; gap: 8px; margin-bottom: 14px; }

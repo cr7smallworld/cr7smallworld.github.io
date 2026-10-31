@@ -1,4 +1,4 @@
-// 个人主页：谁都能看投稿；本人还能看消息和收藏
+// 个人中心：谁都能看公开投稿；本人还能管自己的投稿、看通知/消息/收藏
 (() => {
   const A = window.cr7Account;
   const $ = (id) => document.getElementById(id);
@@ -73,33 +73,156 @@
       case 'edit_rejected': return `你对${t}的修改没有通过，网站上还是原来的版本`;
       case 'comment': return `${n.who || '匿名罗蜜'} 评论了你的投稿${t}`;
       case 'reply': return `${n.who || '匿名罗蜜'} 在${t}下面回复了你`;
+      case 'like': return `${n.who || '有人'} 给你在${t}下面的评论点了赞`;
       default: return t;
     }
   }
-  async function loadNotif() {
-    const box = $('pane-notif');
+  const NOTICE_TYPES = ['review', 'edit_rejected'];
+  const MSG_TYPES = ['comment', 'reply', 'like'];
+  const LS_NOTICE = 'cr7_notice_seen';
+  const LS_MSG = 'cr7_msg_seen';
+  const lsGet = (k) => { try { return Number(localStorage.getItem(k)) || 0; } catch (_) { return 0; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (_) {} };
+  let allNotif = null;
+
+  async function fetchNotif() {
+    if (allNotif) return allNotif;
+    const r = await A.rpc('member_notifications', { p_token: A.token() });
+    if (!r) throw new Error('登录过期了，重新登录一下');
+    allNotif = r;
+    return r;
+  }
+
+  function notifCard(n, isNew) {
+    const a = el('a', 'u-notif' + (isNew ? ' new' : ''));
+    a.href = n.type === 'review' || n.type === 'edit_rejected'
+      ? (n.status === 'approved' ? linkOf({ id: n.sid, section: n.section, kind: n.kind }) : 'user.html?tab=mine')
+      : linkOf({ id: n.sid, section: n.section, kind: n.kind });
+    const label = n.type === 'review' ? (n.status === 'approved' ? '已通过' : '未通过')
+      : n.type === 'edit_rejected' ? '修改未通过'
+      : n.type === 'comment' ? '评论'
+      : n.type === 'like' ? '点赞' : '回复';
+    const top = el('span', 'u-notif-top');
+    top.append(el('span', 'u-notif-type ' + (n.type === 'review' ? n.status : n.type), label));
+    top.append(el('span', 'u-notif-time', ago(n.at)));
+    a.append(top, el('span', 'u-notif-text', notifText(n)));
+    if (n.content) a.append(el('span', 'u-notif-quote', n.content));
+    if (n.note) a.append(el('span', 'u-notif-quote', '站长说：' + n.note));
+    return a;
+  }
+
+  // 两个标签各自算自己的小红点
+  function freshCount(items, types, lsKey) {
+    const seen = lsGet(lsKey);
+    return items.filter((n) => types.includes(n.type) && new Date(n.at).getTime() > seen).length;
+  }
+  async function refreshDots() {
+    try {
+      const r = await fetchNotif();
+      const items = r.items || [];
+      // 第一次用的人没有本地记录，就拿服务端的已读时间打底
+      const base = new Date(r.seen_at).getTime();
+      if (!lsGet(LS_NOTICE)) lsSet(LS_NOTICE, base);
+      if (!lsGet(LS_MSG)) lsSet(LS_MSG, base);
+      $('noticeDot').hidden = freshCount(items, NOTICE_TYPES, LS_NOTICE) === 0;
+      $('notifDot').hidden = freshCount(items, MSG_TYPES, LS_MSG) === 0;
+      if ($('noticeDot').hidden && $('notifDot').hidden) {
+        A.rpc('member_notif_seen', { p_token: A.token() }).catch(() => {});
+        A.clearDot();
+      }
+    } catch (_) {}
+  }
+
+  async function loadPane(kind) {
+    const isNotice = kind === 'notice';
+    const box = $('pane-' + (isNotice ? 'notice' : 'notif'));
+    const types = isNotice ? NOTICE_TYPES : MSG_TYPES;
+    const lsKey = isNotice ? LS_NOTICE : LS_MSG;
     box.replaceChildren(el('p', 'u-empty', '正在加载…'));
     try {
-      const r = await A.rpc('member_notifications', { p_token: A.token() });
-      if (!r) { empty(box, '登录过期了，重新登录一下'); return; }
-      const seen = new Date(r.seen_at).getTime();
-      if (!r.items.length) { empty(box, '还没有消息。投稿审核结果、别人评论你的投稿、回复你的评论都会出现在这里'); }
-      else {
-        box.replaceChildren(...r.items.map((n) => {
-          const a = el('a', 'u-notif' + (new Date(n.at).getTime() > seen ? ' new' : ''));
-          a.href = n.status === 'approved' ? linkOf({ id: n.sid, section: n.section, kind: n.kind }) : 'mine.html';
-          const top = el('span', 'u-notif-top');
-          top.append(el('span', 'u-notif-type ' + (n.type === 'review' ? n.status : n.type), n.type === 'review' ? (n.status === 'approved' ? '已通过' : '未通过') : n.type === 'edit_rejected' ? '修改未通过' : n.type === 'comment' ? '评论' : '回复'));
-          top.append(el('span', 'u-notif-time', ago(n.at)));
-          a.append(top, el('span', 'u-notif-text', notifText(n)));
-          if (n.content) a.append(el('span', 'u-notif-quote', n.content));
-          if (n.note) a.append(el('span', 'u-notif-quote', '站长说：' + n.note));
-          return a;
-        }));
+      const r = await fetchNotif();
+      const seen = lsGet(lsKey);
+      const items = (r.items || []).filter((n) => types.includes(n.type));
+      if (!items.length) {
+        empty(box, isNotice
+          ? '还没有通知。投稿审核过了、站长给你写了意见，都会出现在这里'
+          : '还没有消息。别人评论你的投稿、回复你的评论、给你的评论点赞，都会出现在这里');
+      } else {
+        box.replaceChildren(...items.map((n) => notifCard(n, new Date(n.at).getTime() > seen)));
       }
-      await A.rpc('member_notif_seen', { p_token: A.token() });
-      A.clearDot();
-      $('notifDot').hidden = true;
+      lsSet(lsKey, Date.now());
+      $(isNotice ? 'noticeDot' : 'notifDot').hidden = true;
+      if ($('noticeDot').hidden && $('notifDot').hidden) {
+        await A.rpc('member_notif_seen', { p_token: A.token() }).catch(() => {});
+        A.clearDot();
+      }
+    } catch (err) { empty(box, err.message); }
+  }
+
+  // ---------- 我的投稿（自己管理：含匿名、含待审、能改） ----------
+  const ST = { pending: '审核中', approved: '已通过', rejected: '未通过' };
+  function mineCard(it) {
+    const c = el('article', 'u-sub');
+    const head = el('div', 'u-sub-head');
+    head.append(el('span', 'u-sub-badge ' + it.status, ST[it.status] || it.status));
+    head.append(el('span', 'u-sub-kind', KIND[it.kind] || '投稿'));
+    head.append(el('span', 'u-sub-sec', SEC[it.section] || ''));
+    if (it.is_anon) head.append(el('span', 'u-sub-anon', '匿名'));
+    head.append(el('span', 'u-sub-time', day(it.created_at)));
+    c.append(head);
+    c.append(el('h3', 'u-sub-title', title(it)));
+    if (it.status === 'pending') c.append(el('p', 'u-sub-note', '站长还没审到这条，等一等'));
+    else {
+      const note = el('p', 'u-sub-note ' + it.status);
+      note.append(el('b', null, it.status === 'approved' ? '站长说：' : '没通过的原因：'));
+      note.append(document.createTextNode(it.review_note || (it.status === 'approved' ? '已收录，谢谢你！' : '站长没有写原因')));
+      c.append(note);
+    }
+    const ed = it.last_edit;
+    if (ed && it.status === 'approved') {
+      const n = el('p', 'u-sub-note edit ' + ed.status);
+      if (ed.status === 'pending') n.textContent = '你交的修改还在等站长审核，网站上暂时显示的是旧版';
+      else if (ed.status === 'approved') n.textContent = '你交的修改已经通过，网站上是新版了';
+      else { n.append(el('b', null, '修改没通过：')); n.append(document.createTextNode(ed.review_note || '站长没有写原因')); }
+      c.append(n);
+    }
+    const links = el('div', 'u-sub-links');
+    if (it.status === 'approved' && (it.kind === 'upload' || it.kind === 'person')) {
+      const a = el('a', 'u-sub-link', '去网站上看看 →');
+      a.href = linkOf(it);
+      links.append(a);
+    }
+    if (it.kind === 'upload' || it.kind === 'person') {
+      const e2 = el('a', 'u-sub-link edit', '✎ 修改');
+      e2.href = `submit.html?edit=${it.id}`;
+      e2.addEventListener('click', () => { try { sessionStorage.setItem('cr7_edit_token_' + it.id, it.token); } catch (_) {} });
+      links.append(e2);
+    }
+    if (links.children.length) c.append(links);
+    return c;
+  }
+  async function loadMine() {
+    const box = $('pane-mine');
+    box.replaceChildren(el('p', 'u-empty', '正在加载…'));
+    try {
+      const list = await A.rpc('member_my_all', { p_token: A.token() });
+      if (!list || !list.length) {
+        empty(box, '你还没有用这个账号投过稿。登录以后投的稿会全部记在这里，换手机也找得回来');
+        return;
+      }
+      const named = list.filter((x) => !x.is_anon);
+      const anon = list.filter((x) => x.is_anon);
+      box.replaceChildren();
+      const group = (t, arr, tip) => {
+        if (!arr.length) return;
+        box.append(el('h3', 'u-group', `${t}（${arr.length}）`));
+        if (tip) box.append(el('p', 'u-group-tip', tip));
+        arr.forEach((it) => box.append(mineCard(it)));
+      };
+      group('署名投稿', named, '这些会显示你的用户名，也会出现在上面的「投稿」里和贡献榜上');
+      group('匿名投稿', anon, '这些在网站上显示「匿名罗蜜」，不进你的公开主页也不上贡献榜，但抽卡机会照样算');
+      const tail = el('p', 'u-group-tip', '想改哪条点「✎ 修改」，改完要站长再审一遍，审过之前网站上还是旧版');
+      box.append(tail);
     } catch (err) { empty(box, err.message); }
   }
 
@@ -125,8 +248,10 @@
 
   function tab(name) {
     document.querySelectorAll('.u-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
-    ['items', 'notif', 'favs'].forEach((k) => { $('pane-' + k).hidden = k !== name; });
-    if (name === 'notif') loadNotif();
+    ['items', 'mine', 'notice', 'notif', 'favs'].forEach((k) => { $('pane-' + k).hidden = k !== name; });
+    if (name === 'mine') loadMine();
+    if (name === 'notice') loadPane('notice');
+    if (name === 'notif') loadPane('notif');
     if (name === 'favs') loadFavs();
     const q = new URLSearchParams(location.search);
     if (name === 'items') q.delete('tab'); else q.set('tab', name);
@@ -158,13 +283,12 @@
 
     if (mine) {
       $('uSetting').hidden = false;
-      document.querySelector('[data-tab="notif"]').hidden = false;
-      document.querySelector('[data-tab="favs"]').hidden = false;
-      A.notifCount().then((n) => { $('notifDot').hidden = !n; }).catch(() => {});
+      ['mine', 'notice', 'notif', 'favs'].forEach((k) => { document.querySelector(`[data-tab="${k}"]`).hidden = false; });
+      refreshDots();
     }
     document.querySelectorAll('.u-tab').forEach((b) => b.addEventListener('click', () => tab(b.dataset.tab)));
     const want = new URLSearchParams(location.search).get('tab');
-    if (mine && (want === 'notif' || want === 'favs')) tab(want);
+    if (mine && ['mine', 'notice', 'notif', 'favs'].includes(want)) tab(want);
   }
   start();
 })();
