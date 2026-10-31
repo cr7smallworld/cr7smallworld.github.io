@@ -227,3 +227,10 @@
 .fix-field input, .fix-field textarea, .fix-field select { font: inherit; font-size: 0.86rem; color: var(--text); padding: 7px 9px; border: 1px solid #dfe5ec; border-radius: var(--radius-sm); background: #fff; }
 .fix-field textarea { resize: vertical; }
 .fix-field input:focus, .fix-field textarea:focus { outline: none; border-color: var(--sun); }
+
+/* ===== 公告管理 ===== */
+.ann-compose { padding: 12px 0; }
+.ann-compose textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 13px; resize: vertical; line-height: 1.7; }
+.ann-compose textarea:focus { outline: none; border-color: var(--dark, #333); }
+.ann-compose-bar { display: flex; justify-content: flex-end; margin-top: 8px; }
+.ann-inactive { opacity: 0.55; }

@@ -389,7 +389,9 @@ document.querySelectorAll('#viewTabs button').forEach((b) => b.addEventListener(
   $('editView').hidden = b.dataset.view !== 'edit';
   $('fbView').hidden = b.dataset.view !== 'fb';
   $('cmtView').hidden = b.dataset.view !== 'cmt';
+  $('annView').hidden = b.dataset.view !== 'ann';
   if (b.dataset.view === 'cmt') markCmtSeen();
+  if (b.dataset.view === 'ann') loadAnns();
 }));
 document.querySelectorAll('#fbTabs button').forEach((b) => b.addEventListener('click', () => {
   fb.tab = b.dataset.fb;
@@ -685,3 +687,106 @@ function renderCmts() {
     box.append(card);
   });
 }
+
+// ================= 公告 =================
+let anns = [];
+async function loadAnns() {
+  msg('annMsg', '加载中…');
+  const { data, error } = await supabase.from('announcements').select('*').order('sort_order', { ascending: false }).order('created_at', { ascending: false });
+  if (error) return msg('annMsg', '加载失败：' + error.message, 'error');
+  anns = data || [];
+  msg('annMsg', '');
+  renderAnns();
+}
+function renderAnns() {
+  const box = $('annList');
+  box.innerHTML = '';
+  if (!anns.length) { box.innerHTML = '<p class="admin-msg">还没发过公告</p>'; return; }
+  anns.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'admin-card' + (a.is_active ? '' : ' ann-inactive');
+    const d = new Date(a.created_at);
+    const ts = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    const badge = a.is_active ? '<span style="color:#2a7;font-weight:600">显示中</span>' : '<span style="color:#999">已隐藏</span>';
+    card.innerHTML = `<div class="a-head"><span class="a-date">${ts}</span> ${badge}</div><p class="a-detail fb-msg">${escH(a.content)}</p><div class="a-actions"><div class="a-btns"></div></div>`;
+    const btns = card.querySelector('.a-btns');
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = '编辑';
+    editBtn.addEventListener('click', () => {
+      const detail = card.querySelector('.a-detail');
+      const ta = document.createElement('textarea');
+      ta.value = a.content;
+      ta.rows = 3;
+      ta.maxLength = 500;
+      ta.style.cssText = 'width:100%;font:inherit;font-size:13px;line-height:1.7;resize:vertical;margin-bottom:8px;';
+      detail.replaceWith(ta);
+      ta.focus();
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.textContent = '保存';
+      save.addEventListener('click', async () => {
+        const v = ta.value.trim();
+        if (!v) return msg('annMsg', '公告不能为空', 'error');
+        if (v.length > 500) return msg('annMsg', '最多500字', 'error');
+        save.disabled = true;
+        const { error: e } = await supabase.from('announcements').update({ content: v, updated_at: new Date().toISOString() }).eq('id', a.id);
+        save.disabled = false;
+        if (e) return msg('annMsg', '保存失败：' + e.message, 'error');
+        a.content = v;
+        msg('annMsg', '已保存', 'ok');
+        renderAnns();
+      });
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.textContent = '取消';
+      cancel.addEventListener('click', renderAnns);
+      btns.replaceChildren(editBtn, save, cancel);
+    });
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = a.is_active ? 'a-rej' : 'a-ok';
+    toggleBtn.textContent = a.is_active ? '隐藏' : '显示';
+    toggleBtn.addEventListener('click', async () => {
+      toggleBtn.disabled = true;
+      const { error: e } = await supabase.from('announcements').update({ is_active: !a.is_active, updated_at: new Date().toISOString() }).eq('id', a.id);
+      toggleBtn.disabled = false;
+      if (e) return msg('annMsg', '操作失败：' + e.message, 'error');
+      a.is_active = !a.is_active;
+      msg('annMsg', a.is_active ? '已显示' : '已隐藏', 'ok');
+      renderAnns();
+    });
+    btns.append(editBtn);
+    btns.append(toggleBtn);
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'a-del';
+    delBtn.textContent = '删除';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('删掉这条公告？')) return;
+      delBtn.disabled = true;
+      const { error: e } = await supabase.from('announcements').delete().eq('id', a.id);
+      delBtn.disabled = false;
+      if (e) return msg('annMsg', '删除失败：' + e.message, 'error');
+      anns = anns.filter(x => x.id !== a.id);
+      msg('annMsg', '已删除', 'ok');
+      renderAnns();
+    });
+    btns.append(delBtn);
+    box.append(card);
+  });
+}
+function escH(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+$('annRefresh').addEventListener('click', loadAnns);
+$('annPostBtn').addEventListener('click', async () => {
+  const text = $('annText').value.trim();
+  if (!text) return msg('annMsg', '写点内容再发', 'error');
+  if (text.length > 500) return msg('annMsg', '最多500字', 'error');
+  $('annPostBtn').disabled = true;
+  const { error } = await supabase.from('announcements').insert({ content: text });
+  $('annPostBtn').disabled = false;
+  if (error) return msg('annMsg', '发布失败：' + error.message, 'error');
+  $('annText').value = '';
+  msg('annMsg', '发布成功', 'ok');
+  loadAnns();
+});

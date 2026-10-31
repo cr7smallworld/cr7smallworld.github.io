@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261031d">
-  <link rel="stylesheet" href="css/admin.css?v=20261031d">
-  <link rel="stylesheet" href="css/polish.css?v=20261031d">
+  <link rel="stylesheet" href="css/style.css?v=20261101a">
+  <link rel="stylesheet" href="css/admin.css?v=20261101a">
+  <link rel="stylesheet" href="css/polish.css?v=20261101a">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -38,6 +38,7 @@
         <button type="button" data-view="edit">修改 <b id="cEdit">0</b></button>
         <button type="button" data-view="fb">留言 <b id="cFbUnread">0</b></button>
         <button type="button" data-view="cmt">评论 <b id="cCmtNew">0</b></button>
+        <button type="button" data-view="ann">公告</button>
       </div>
       <div id="subView">
       <div class="admin-bar">
@@ -95,11 +96,26 @@
         <p class="admin-msg" id="cmtMsg" role="status"></p>
         <div id="cmtList"></div>
       </div>
+
+      <div id="annView" hidden>
+        <div class="admin-bar">
+          <p class="edit-hint">写公告发到首页，网友能关掉某一条，你发新的会再弹出来</p>
+          <div class="admin-tools"><button type="button" id="annRefresh">刷新</button></div>
+        </div>
+        <div class="ann-compose">
+          <textarea id="annText" rows="3" maxlength="500" placeholder="写一条公告（最多500字）"></textarea>
+          <div class="ann-compose-bar">
+            <button type="button" class="admin-primary" id="annPostBtn">发布</button>
+          </div>
+        </div>
+        <p class="admin-msg" id="annMsg" role="status"></p>
+        <div id="annList"></div>
+      </div>
     </div>
 
   </main>
 
   <script src="js/vendor/supabase.js"></script>
-  <script type="module" src="js/admin.js?v=20261031d"></script>
+  <script type="module" src="js/admin.js?v=20261101a"></script>
 </body>
 </html>

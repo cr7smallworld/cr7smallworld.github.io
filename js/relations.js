@@ -1,8 +1,8 @@
 // 人物关系：按时期分组的人物名单，点开一个人看介绍和糖点经历
 // 人物 = submissions 里 kind='person' 的行；糖点 = kind='upload' 且 person_id 指向这个人
 
-import { mountComments, countComments } from './comments.js?v=20261031d';
-import { showShare } from './share.js?v=20261031d';
+import { mountComments, countComments } from './comments.js?v=20261101a';
+import { showShare } from './share.js?v=20261101a';
 
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
