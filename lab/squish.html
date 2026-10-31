@@ -63,7 +63,7 @@
   if (!gl) { hint.textContent = '这个浏览器不支持捏捏效果（没有 WebGL），换个浏览器试试，比如 Chrome 或者 Edge'; return; }
 
   // ---------- 网格 ----------
-  const N = 64, V = N * N;
+  const N = 80, V = N * N;
   const bx = new Float32Array(V), by = new Float32Array(V);
   const dx = new Float32Array(V), dy = new Float32Array(V);
   const vx = new Float32Array(V), vy = new Float32Array(V);
@@ -212,7 +212,7 @@
   cv.addEventListener('contextmenu', (e) => e.preventDefault());
 
   const val = (id) => Number(document.getElementById(id).value);
-  const radius = () => 0.07 + val('size') * 0.016;
+  const radius = () => 0.022 + (val('size') - 1) * 0.0231;   // 0.022 ~ 0.23
   const tX = new Float32Array(V), tY = new Float32Array(V), tZ = new Float32Array(V);
 
   // ---------- 物理 ----------
@@ -234,7 +234,11 @@
         f.ax = f.x - ox * lim / len; f.ay = f.y - oy * lim / len;
         ox = f.x - f.ax; oy = f.y - f.ay;
       }
-      for (let q = 0; q < V; q++) {
+      const span = R * 3, G = N - 1;
+      const i0 = Math.max(0, Math.floor((f.ax - span) * G)), i1 = Math.min(G, Math.ceil((f.ax + span) * G));
+      const j0 = Math.max(0, Math.floor((f.ay - span) * G)), j1 = Math.min(G, Math.ceil((f.ay + span) * G));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const q = j * N + i;
         const rx = bx[q] - f.ax, ry = by[q] - f.ay;
         const r2 = (rx * rx + ry * ry) / R2;
         if (r2 > 9) continue;
@@ -274,7 +278,7 @@
       // 陷下去的地方暗一点，坑沿朝左上的一面亮一点，鼓起来的地方也亮一点
       const gx = (i > 0 && i < N - 1) ? z[q - 1] - z[q + 1] : 0;
       const gy = (j > 0 && j < N - 1) ? z[q - N] - z[q + N] : 0;
-      const sh = 1 - z[q] * 0.3 - (gx * 0.7 + gy) * 2.2;
+      const sh = 1 - z[q] * 0.3 - (gx * 0.7 + gy) * 2.2 * (N / 64);
       shade[q] = sh < 0.55 ? 0.55 : sh > 1.25 ? 1.25 : sh;
     }
     gl.clearColor(0.078, 0.094, 0.122, 1);
