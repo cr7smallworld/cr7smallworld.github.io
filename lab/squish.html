@@ -21,6 +21,9 @@
   #panel span { display: flex; justify-content: space-between; }
   #panel i { font-style: normal; color: #6E7884; }
   input[type=range] { width: 100%; accent-color: #D4A847; }
+  [hidden] { display: none !important; }
+  #status { position: absolute; left: 10px; right: 10px; bottom: 8px; padding: 6px 10px; font-size: .75rem; line-height: 1.5; color: #E9E3D3; background: rgba(0,0,0,.55); border-radius: 8px; pointer-events: none; }
+  #status.err { color: #FFB4A8; }
 </style>
 </head>
 <body>
@@ -31,6 +34,7 @@
 </header>
 <div id="stage">
   <canvas id="c"></canvas>
+  <p id="status" hidden></p>
   <p id="hint">点右上角"选图"挑一张<br>图片只在这台手机里打开，不会上传到任何地方</p>
 </div>
 <section id="panel">
@@ -44,8 +48,19 @@
 (() => {
   const cv = document.getElementById('c');
   const hint = document.getElementById('hint');
-  const gl = cv.getContext('webgl', { antialias: true, alpha: false });
-  if (!gl) { hint.textContent = '这个浏览器打不开，换个浏览器试试'; return; }
+  const statusEl = document.getElementById('status');
+  let statusTimer;
+  const say = (text, err, keep) => {
+    statusEl.textContent = text;
+    statusEl.className = err ? 'err' : '';
+    statusEl.hidden = false;
+    clearTimeout(statusTimer);
+    if (!keep && !err) statusTimer = setTimeout(() => { statusEl.hidden = true; }, 2500);
+  };
+  window.addEventListener('error', (e) => say('出错了：' + e.message, true));
+  const opts = { antialias: true, alpha: false };
+  const gl = cv.getContext('webgl', opts) || cv.getContext('experimental-webgl', opts);
+  if (!gl) { hint.textContent = '这个浏览器不支持捏捏效果（没有 WebGL），换个浏览器试试，比如 Chrome 或者 Edge'; return; }
 
   // ---------- 网格 ----------
   const N = 64, V = N * N;
@@ -73,12 +88,20 @@
     void main(){ vUv=aUv; vS=aShade; gl_Position=vec4((aPos.x*2.0-1.0)*uScale.x,(1.0-aPos.y*2.0)*uScale.y,0.0,1.0); }`;
   const fs = `precision mediump float; uniform sampler2D uTex; varying vec2 vUv; varying float vS;
     void main(){ vec3 c=texture2D(uTex,vUv).rgb; vec3 col=c*min(vS,1.0)+vec3(max(vS-1.0,0.0))*0.55; gl_FragColor=vec4(col,1.0); }`;
-  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const sh = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) say('着色器出错：' + gl.getShaderInfoLog(s), true);
+    return s;
+  };
   const prog = gl.createProgram();
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs));
   gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
   gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) say('着色器出错：' + gl.getProgramInfoLog(prog), true);
   gl.useProgram(prog);
+  gl.uniform1i(gl.getUniformLocation(prog, 'uTex'), 0);
   const buf = (data, loc, size, usage) => {
     const b = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, b);
@@ -103,6 +126,7 @@
   let imgAspect = 0, sx = 1, sy = 1;
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (!cv.clientWidth || !cv.clientHeight) { requestAnimationFrame(resize); return; }
     cv.width = Math.round(cv.clientWidth * dpr);
     cv.height = Math.round(cv.clientHeight * dpr);
     gl.viewport(0, 0, cv.width, cv.height);
@@ -114,25 +138,49 @@
   window.addEventListener('resize', resize);
 
   // ---------- 选图 ----------
-  document.getElementById('file').addEventListener('change', (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const img = new Image();
-    img.onload = () => {
-      const max = 2048, r = Math.min(1, max / Math.max(img.width, img.height));
-      const c2 = document.createElement('canvas');
-      c2.width = Math.round(img.width * r); c2.height = Math.round(img.height * r);
-      c2.getContext('2d').drawImage(img, 0, 0, c2.width, c2.height);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, c2);
-      imgAspect = c2.width / c2.height;
-      URL.revokeObjectURL(img.src);
-      hint.hidden = true;
-      reset();
-      resize();
+  function useImage(src, w, h) {
+    const max = Math.min(2048, gl.getParameter(gl.MAX_TEXTURE_SIZE) || 2048);
+    const r = Math.min(1, max / Math.max(w, h));
+    const c2 = document.createElement('canvas');
+    c2.width = Math.max(1, Math.round(w * r));
+    c2.height = Math.max(1, Math.round(h * r));
+    c2.getContext('2d').drawImage(src, 0, 0, c2.width, c2.height);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c2);
+    const err = gl.getError();
+    if (err) { say('图片放不进去（错误码 ' + err + '），换一张小一点的试试', true); return; }
+    imgAspect = c2.width / c2.height;
+    hint.hidden = true;
+    reset();
+    resize();
+    say(`读好了 ${w}×${h}，按上去捏捏看`);
+  }
+
+  const fileInput = document.getElementById('file');
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files && fileInput.files[0];
+    fileInput.value = '';            // 同一张图可以再选一次
+    if (!f) { say('没拿到图片，再点一次"选图"', true); return; }
+    say('正在读取图片…', false, true);
+    const fr = new FileReader();
+    fr.onerror = () => say('图片读不出来，换一张试试', true);
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => useImage(img, img.naturalWidth, img.naturalHeight);
+      img.onerror = async () => {
+        // 有的手机格式（比如 HEIC）Image 打不开，再试一次
+        try {
+          const bmp = await createImageBitmap(f);
+          useImage(bmp, bmp.width, bmp.height);
+        } catch (_) {
+          say('这张图的格式打不开，换成 jpg 或 png 再试试', true);
+        }
+      };
+      img.src = fr.result;
     };
-    img.onerror = () => { hint.textContent = '这张图打不开，换一张试试'; };
-    img.src = URL.createObjectURL(f);
+    fr.readAsDataURL(f);
   });
 
   function reset() { [dx, dy, vx, vy, z, vz].forEach((a) => a.fill(0)); }
@@ -158,7 +206,7 @@
     if (!f) return;
     [f.x, f.y] = toUv(e);
   });
-  const up = (e) => { const f = fingers.get(e.pointerId); if (f) { poke(f.x, f.y, -0.45); fingers.delete(e.pointerId); }   // 松手往外弹 };
+  const up = (e) => { const f = fingers.get(e.pointerId); if (f) { poke(f.x, f.y, -0.45); fingers.delete(e.pointerId); } };   // 松手往外弹
   cv.addEventListener('pointerup', up);
   cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', (e) => e.preventDefault());
