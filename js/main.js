@@ -123,12 +123,81 @@ window.cr7Account = (() => {
     if (token) { try { await rpc('member_logout', { p_token: token }); } catch (_) {} }
   }
 
+  // 读公开数据（只能读到审核通过的）
+  async function rest(path) {
+    let res;
+    try { res = await fetch(API.replace('/rpc/', '/') + path, { headers: { apikey: KEY } }); }
+    catch (_) { throw new Error('网络好像断了一下，换个网络再试试'); }
+    if (!res.ok) throw new Error('出了点问题，稍后再试一次');
+    return res.json();
+  }
+
+  // ---------- 消息小红点 ----------
+  const LS_DOT = 'cr7_member_dot';
+  async function notifCount() {
+    const token = get(LS_TOKEN);
+    if (!token) return 0;
+    const n = (await rpc('member_notif_count', { p_token: token })) || 0;
+    set(LS_DOT, String(n));
+    refreshNav();
+    return n;
+  }
+  function clearDot() { set(LS_DOT, '0'); refreshNav(); }
+
+  // ---------- 收藏 ----------
+  let favCache = null;
+  function favs() {
+    const token = get(LS_TOKEN);
+    if (!token) return Promise.resolve(new Set());
+    if (!favCache) {
+      favCache = rpc('member_favs', { p_token: token })
+        .then((r) => new Set((r || []).map((x) => x.target_id)))
+        .catch(() => { favCache = null; return new Set(); });
+    }
+    return favCache;
+  }
+  async function toggleFav(id) {
+    const token = get(LS_TOKEN);
+    if (!token) {
+      location.href = 'login.html?back=' + encodeURIComponent((location.pathname.split('/').pop() || 'index.html') + location.search);
+      return null;
+    }
+    const on = await rpc('member_fav_toggle', { p_token: token, p_target: id });
+    const s = await favs();
+    if (on) s.add(id); else s.delete(id);
+    return on;
+  }
+  // 收藏按钮：传一个 button 进来，自动显示状态、点了切换
+  function favButton(btn, id) {
+    const paint = (on) => { btn.textContent = on ? '★ 已收藏' : '☆ 收藏'; btn.classList.toggle('on', on); };
+    paint(false);
+    favs().then((s) => paint(s.has(id)));
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      btn.disabled = true;
+      try { const on = await toggleFav(id); if (on != null) paint(on); }
+      catch (err) { alert(err.message); }
+      finally { btn.disabled = false; }
+    });
+    return btn;
+  }
+
   function refreshNav() {
     const name = get(LS_NAME);
+    const dot = name && Number(get(LS_DOT) || 0) > 0;
     document.querySelectorAll('.nav-account').forEach((a) => {
       a.textContent = name ? '👤 ' + name : '登录';
-      a.title = name ? '我的账号' : '登录 / 注册';
+      a.title = name ? '我的主页' : '登录 / 注册';
+      a.href = name ? 'user.html?u=' + encodeURIComponent(name) : 'login.html';
+      if (dot) {
+        const d = document.createElement('span');
+        d.className = 'nav-dot';
+        d.setAttribute('aria-label', '有新消息');
+        a.append(d);
+      }
     });
+    const t = document.querySelector('.nav-toggle');
+    if (t) t.classList.toggle('has-dot', !!dot);
   }
 
   // 导航里没有账号入口的页面自动补一个
@@ -138,12 +207,41 @@ window.cr7Account = (() => {
     const a = document.createElement('a');
     a.href = 'login.html';
     a.className = 'nav-account';
+    if (here === 'login.html') a.classList.add('active');
     li.append(a);
     ul.append(li);
   });
   refreshNav();
-  // 后台悄悄核对一下口令还有没有效
-  if (get(LS_TOKEN)) me().catch(() => {});
+  // 后台悄悄核对一下口令还有没有效，顺便看看有没有新消息
+  if (get(LS_TOKEN)) me().then((m) => { if (m) notifCount().catch(() => {}); }).catch(() => {});
 
-  return { register, login, logout, me, refreshNav, token: () => get(LS_TOKEN), username: () => get(LS_NAME) };
+  return {
+    register, login, logout, me, refreshNav, rpc, rest, notifCount, clearDot, favs, toggleFav, favButton,
+    token: () => get(LS_TOKEN), username: () => get(LS_NAME),
+  };
 })();
+
+// 导航里加"搜索"入口（放在登录前面）
+document.querySelectorAll('.nav-links').forEach((ul) => {
+  if (ul.querySelector('.nav-search')) return;
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.href = 'search.html';
+  a.className = 'nav-search';
+  a.textContent = '搜索';
+  if (here === 'search.html') a.classList.add('active');
+  li.append(a);
+  const acc = ul.querySelector('.nav-account');
+  ul.insertBefore(li, acc ? acc.closest('li') : null);
+});
+
+// 投稿人的名字：登录投稿的能点进个人主页
+window.cr7Who = (name, fallback) => {
+  if (!name) return document.createTextNode(fallback || '匿名');
+  const a = document.createElement('a');
+  a.className = 'who-link';
+  a.href = 'user.html?u=' + encodeURIComponent(name);
+  a.textContent = name;
+  a.addEventListener('click', (e) => e.stopPropagation());
+  return a;
+};

@@ -444,3 +444,18 @@ body {
 @media (max-width: 768px) {
   .nav-links a.nav-account { margin-top: 6px; text-align: center; max-width: none; }
 }
+.nav-account { position: relative; }
+.nav-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #E2463A; box-shadow: 0 0 0 2px #fff;
+}
+.nav-toggle { position: relative; }
+.nav-toggle.has-dot::after {
+  content: ''; position: absolute; top: 4px; right: 2px;
+  width: 8px; height: 8px; border-radius: 50%; background: #E2463A; box-shadow: 0 0 0 2px #fff;
+}
+@media (min-width: 769px) and (max-width: 1180px) {
+  .nav-links { gap: 0; }
+  .nav-links a { padding: 6px 7px; font-size: 0.8rem; }
+}

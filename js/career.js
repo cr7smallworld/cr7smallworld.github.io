@@ -42,5 +42,20 @@ if (toggleAll) {
 }
 
 // 从首页点某个时期进来，直接打开那一页
-const start = new URLSearchParams(location.search).get('era');
+const qs = new URLSearchParams(location.search);
+const start = qs.get('era');
 if (start) showEra(start, false);
+const pick = Number(qs.get('i'));
+if (start && qs.has('i')) {
+  const item = document.querySelectorAll(`#era-${start} .timeline-item`)[pick];
+  const card = item && item.querySelector('.timeline-card');
+  if (card) {
+    card.classList.add('open');
+    updateToggleAll();
+    history.replaceState(null, '', `?era=${start}&i=${pick}`);
+    setTimeout(() => {
+      item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('flash');
+    }, 150);
+  }
+}

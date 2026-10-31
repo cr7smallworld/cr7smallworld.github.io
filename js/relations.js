@@ -1,7 +1,8 @@
 // 人物关系：按时期分组的人物名单，点开一个人看介绍和糖点经历
 // 人物 = submissions 里 kind='person' 的行；糖点 = kind='upload' 且 person_id 指向这个人
 
-import { mountComments, countComments } from './comments.js?v=20261031c';
+import { mountComments, countComments } from './comments.js?v=20261031d';
+import { showShare } from './share.js?v=20261031d';
 
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
@@ -46,7 +47,7 @@ const clubsOf = (p) => {
 async function load() {
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, created_at, kind, summary, event_date, detail, source, tags, uploader, image_paths, video_url, person_role, person_alias, person_id')
+    .select('id, created_at, kind, summary, event_date, detail, source, tags, uploader, public_member, image_paths, video_url, person_role, person_alias, person_id')
     .eq('section', 'relations')
     .eq('status', 'approved')
     .in('kind', ['person', 'upload'])
@@ -252,7 +253,17 @@ function fillPanel(panel, p) {
   const share = el('button', 'pp-btn', '复制链接');
   share.type = 'button';
   share.addEventListener('click', () => copyLink(share, `?p=${p.id}`, `【CR7的小世界】他和${p.summary}`));
-  act.append(add, sup, fix, share);
+  const pic = el('button', 'pp-btn', '生成分享图');
+  pic.type = 'button';
+  pic.addEventListener('click', () => showShare({
+    kicker: '人物关系' + (p.person_role ? ' · ' + p.person_role : ''),
+    title: `咪和${p.summary}`,
+    detail: p.detail || aliases(p).join('、'),
+    image: p.image_paths && p.image_paths.length ? imgUrl(p.image_paths[0]) : '',
+  }, pic));
+  const fav = el('button', 'pp-btn fav-btn');
+  fav.type = 'button';
+  act.append(add, sup, fix, share, pic, window.cr7Account.favButton(fav, p.id));
   panel.append(act);
 
   // 每条糖点底下一个可展开的小评论区，人物本身一个评论区
@@ -299,7 +310,21 @@ function moment(m) {
     foot.append(a);
   }
   foot.append(el('span', null, '出处：' + (m.source || '未知')));
-  foot.append(el('span', null, '投稿：' + (m.uploader || '匿名')));
+  const by = el('span');
+  by.append('投稿：', window.cr7Who(m.public_member, m.uploader || '匿名'));
+  foot.append(by);
+  const pic = el('button', 'mm-fix mm-pic', '分享图');
+  pic.type = 'button';
+  pic.addEventListener('click', () => {
+    const who = state.people.find((x) => x.id === m.person_id);
+    showShare({
+      kicker: `咪和${who ? who.summary : ''}${m.event_date ? ' · ' + m.event_date : ''}`,
+      title: m.summary,
+      detail: m.detail,
+      image: m.image_paths && m.image_paths.length ? imgUrl(m.image_paths[0]) : (who && who.image_paths && who.image_paths[0] ? imgUrl(who.image_paths[0]) : ''),
+    }, pic);
+  });
+  foot.append(pic);
   const sup = el('a', 'mm-fix', '补充');
   sup.href = `submit.html?kind=supplement&section=relations&target=${m.id}`;
   const fix = el('a', 'mm-fix', '纠错');

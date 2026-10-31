@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261031a">
-  <link rel="stylesheet" href="css/pages.css?v=20261030a">
-  <link rel="stylesheet" href="css/polish.css?v=20261031c">
+  <link rel="stylesheet" href="css/style.css?v=20261031d">
+  <link rel="stylesheet" href="css/pages.css?v=20261031d">
+  <link rel="stylesheet" href="css/polish.css?v=20261031d">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -70,9 +70,19 @@
 
     <div class="section-more mine-entry"><a href="mine.html" class="more-link">查看我的投稿和留言回复</a></div>
 
+    <section class="info-block rank-block" id="rankBlock">
+      <h2>贡献榜</h2>
+      <div class="rank-tabs" role="tablist">
+        <button type="button" class="rank-tab on" data-m="month">本月考古王</button>
+        <button type="button" class="rank-tab" data-m="all">总榜</button>
+      </div>
+      <ol class="rank-list" id="rankList"><li class="rank-empty">正在加载…</li></ol>
+      <p class="rank-note">按审核通过的投稿条数算。<a href="login.html?back=community.html">登录</a>以后投稿才会算进来，勾了匿名的不上榜。</p>
+    </section>
+
     <section class="info-block">
       <h2>投稿会去哪里</h2>
-      <p>可以投到这四个板块：有趣事件 &amp; 性格萌点、人物关系、珍贵资料库、精彩二创。生涯档案和荣誉与数据由站长维护，发现写错了可以点"我要纠错"。</p>
+      <p>可以投到这五个板块：有趣事件 &amp; 性格萌点、人物关系、珍贵资料库、精彩二创、🦌管素材。生涯档案和荣誉与数据由站长维护，发现写错了可以点"我要纠错"。</p>
     </section>
 
     <section class="info-block">
@@ -103,6 +113,7 @@
     </div>
   </footer>
 
-  <script src="js/main.js?v=20261031a"></script>
+  <script src="js/main.js?v=20261031d"></script>
+  <script src="js/community.js?v=20261031d"></script>
 </body>
 </html>

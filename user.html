@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人主页 · CR7的小世界</title>
+  <meta name="description" content="这个小世界属于每一个爱他的人">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20261031d">
+  <link rel="stylesheet" href="css/pages.css?v=20261031d">
+  <link rel="stylesheet" href="css/polish.css?v=20261031d">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="honors.html">荣誉与数据</a></li>
+        <li><a href="fun.html">有趣事件</a></li>
+        <li><a href="relations.html">人物关系</a></li>
+        <li><a href="archive.html">珍贵资料库</a></li>
+        <li><a href="fanworks.html">精彩二创</a></li>
+        <li><a href="spicy.html">🦌管素材</a></li>
+        <li><a href="community.html">社区共建</a></li>
+        <li><a href="about.html">关于</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="board-header">
+    <div class="board-header-inner">
+      <span class="kicker">Profile</span>
+      <h1 id="pageTitle">个人主页</h1>
+      <p id="pageSub"></p>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <p class="board-state" id="loading"><span class="loading-dots">正在加载</span></p>
+    <div class="board-state" id="notFound" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>没有找到这个人</h2><p>用户名可能写错了，或者这个账号不存在</p>
+      <a class="board-cta" href="index.html">回首页</a>
+    </div>
+
+    <section id="profile" hidden>
+      <div class="u-card">
+        <div class="u-avatar" id="uAvatar"></div>
+        <div class="u-info">
+          <p class="u-badge" id="uBadge"></p>
+          <p class="u-meta" id="uMeta"></p>
+        </div>
+        <a class="u-set" id="uSetting" href="login.html" hidden>账号</a>
+      </div>
+
+      <div class="u-tabs" role="tablist">
+        <button type="button" class="u-tab on" data-tab="items">投稿</button>
+        <button type="button" class="u-tab" data-tab="notif" hidden>消息<span class="u-tab-dot" id="notifDot" hidden></span></button>
+        <button type="button" class="u-tab" data-tab="favs" hidden>收藏</button>
+      </div>
+
+      <div class="u-pane" id="pane-items"></div>
+      <div class="u-pane" id="pane-notif" hidden></div>
+      <div class="u-pane" id="pane-favs" hidden></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="career.html">生涯档案</a><a href="honors.html">荣誉与数据</a><a href="fun.html">有趣事件</a><a href="relations.html">人物关系</a><a href="archive.html">珍贵资料库</a><a href="fanworks.html">精彩二创</a><a href="spicy.html">🦌管素材</a><a href="community.html">社区共建</a><a href="mine.html">我的投稿</a><a href="about.html">关于</a>
+      </nav>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js?v=20261031d"></script>
+  <script src="js/vendor/supabase.js"></script>
+  <script src="js/user.js?v=20261031d"></script>
+</body>
+</html>

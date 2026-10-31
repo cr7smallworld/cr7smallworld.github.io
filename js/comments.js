@@ -90,7 +90,7 @@ export function mountComments(container, supabase, targetId, { collapsed = false
     listBox.replaceChildren(el('p', 'cmt-empty', '加载中…'));
     const { data, error } = await supabase
       .from('comments')
-      .select('id, created_at, parent_id, reply_to, nickname, content, like_count')
+      .select('id, created_at, parent_id, reply_to, nickname, content, like_count, public_member')
       .eq('target_id', targetId)
       .order('created_at', { ascending: true })
       .limit(500);
@@ -122,7 +122,9 @@ export function mountComments(container, supabase, targetId, { collapsed = false
     const liked = !!readJson(LS_LIKED)[c.id];
     const n = el('div', 'cmt-item');
     const meta = el('p', 'cmt-meta');
-    meta.append(el('b', null, c.nickname || '匿名罗蜜'), el('span', null, ago(c.created_at)));
+    const nm = el('b');
+    nm.append(c.public_member && window.cr7Who ? window.cr7Who(c.public_member) : document.createTextNode(c.nickname || '匿名罗蜜'));
+    meta.append(nm, el('span', null, ago(c.created_at)));
     n.append(meta);
     const p = el('p', 'cmt-text');
     if (c.reply_to) p.append(el('span', 'cmt-to', `回复 @${c.reply_to}：`));

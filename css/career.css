@@ -220,4 +220,5 @@
   .timeline-dot { left: -25px; width: 10px; height: 10px; }
   .era-tabs-inner { padding: 8px 16px; }
   .era-tab { padding: 6px 12px; font-size: 0.78rem; }
-}
+}.timeline-card.flash { animation: careerFlash 2.2s ease; }
+@keyframes careerFlash { 0%, 60% { box-shadow: 0 0 0 3px rgba(212, 168, 71, 0.55); } 100% { box-shadow: none; } }

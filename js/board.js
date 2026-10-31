@@ -1,5 +1,6 @@
 // Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
-import { mountComments } from './comments.js?v=20261031c';
+import { mountComments } from './comments.js?v=20261031d';
+import { showShare } from './share.js?v=20261031d';
 
 // 公开钥匙：只能读"审核通过"的投稿
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
@@ -39,6 +40,9 @@ const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 const NO_CAPTION = '🦌';
 const caption = (it) => (SPICY && it.summary === NO_CAPTION ? '' : it.summary);
 
+const SECTION_TITLE = { fun: '有趣事件', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
+const who = (it) => window.cr7Who(it.public_member, it.uploader || '匿名');
+
 function fwLine(it) {
   const p = el('p', 'card-date fw-type');
   p.textContent = it.fanwork_type || '二创';
@@ -56,7 +60,7 @@ function el(tag, cls, text) {
 async function load() {
   const { data, error } = await supabase
     .from('submissions')
-    .select('id, created_at, section, summary, event_date, detail, source, tags, uploader, image_paths, video_url'
+    .select('id, created_at, section, summary, event_date, detail, source, tags, uploader, public_member, image_paths, video_url'
       + (FW ? ', fanwork_type, fanwork_platform, fanwork_author' : ''))
     .eq('section', SECTION)
     .eq('kind', 'upload')
@@ -169,9 +173,10 @@ function card(it) {
   const tags = el('div', 'card-tags');
   (it.tags || []).slice(0, 4).forEach((t) => tags.append(el('span', 'card-tag' + (CLUBS.includes(t) ? ' club' : ''), '#' + t)));
   body.append(tags);
-  body.append(el('p', 'card-by', FW
-    ? `原作者：${it.fanwork_author || '未知'}${it.fanwork_platform ? ' · ' + it.fanwork_platform : ''}`
-    : '投稿：' + (it.uploader || '匿名')));
+  const by = el('p', 'card-by');
+  if (FW) by.textContent = `原作者：${it.fanwork_author || '未知'}${it.fanwork_platform ? ' · ' + it.fanwork_platform : ''}`;
+  else by.append('投稿：', who(it));
+  body.append(by);
   c.append(body);
   const open = () => openDetail(it);
   c.addEventListener('click', open);
@@ -220,7 +225,9 @@ function openDetail(it) {
     : SPICY ? [['投稿', it.uploader || '匿名']]
     : [['出处', it.source || '未知'], ['投稿', it.uploader || '匿名']];
   rows.forEach(([k, val]) => {
-    meta.append(el('dt', null, k), el('dd', null, val));
+    const dd = el('dd');
+    if (k === '投稿') dd.append(who(it)); else dd.textContent = val;
+    meta.append(el('dt', null, k), dd);
   });
   box.append(meta);
 
@@ -242,7 +249,17 @@ function openDetail(it) {
     try { await navigator.clipboard.writeText(`${text} ${link}`); cp.textContent = '已复制 ✓'; }
     catch (_) { prompt('长按复制下面的链接', `${text} ${link}`); }
   });
-  share.append(wb, cp);
+  const pic = el('button', 'share-btn', '生成分享图');
+  pic.type = 'button';
+  pic.addEventListener('click', () => showShare({
+    kicker: SPICY ? '🦌管素材' : `${SECTION_TITLE[SECTION] || ''}${!FW && it.event_date ? ' · ' + it.event_date : ''}${FW && it.fanwork_type ? ' · ' + it.fanwork_type : ''}`,
+    title: caption(it) || '🦌管素材',
+    detail: it.detail,
+    image: it.image_paths && it.image_paths.length ? imgUrl(it.image_paths[0]) : '',
+  }, pic));
+  const fav = el('button', 'share-btn fav-btn');
+  fav.type = 'button';
+  share.append(pic, wb, cp, window.cr7Account.favButton(fav, it.id));
   box.append(share);
 
   const links = el('p', 'm-links');

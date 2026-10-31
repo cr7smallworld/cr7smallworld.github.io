@@ -6,7 +6,7 @@ const STORE = 'cr7_my_submissions';
 const FB_STORE = 'cr7_my_feedback';
 const FB_CATS = { suggestion: '建议', problem: '发现问题', other: '其他' };
 const KIND_NAMES = { upload: '上传', supplement: '补充', correction: '纠错', person: '添加人物' };
-const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创' };
+const SECTION_NAMES = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
 const STATUS_NAMES = { pending: '审核中', approved: '已通过 ✓', rejected: '未通过' };
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
