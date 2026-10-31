@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>捏捏试玩</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: #14181F; color: #E9E3D3; font-family: -apple-system, "Noto Sans SC", sans-serif; overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; }
+  header b { flex: 1; font-size: 1rem; color: #D4A847; letter-spacing: .05em; }
+  .btn { padding: 7px 14px; font: inherit; font-size: .85rem; color: #14181F; background: #D4A847; border: none; border-radius: 999px; cursor: pointer; }
+  .btn.ghost { color: #D4A847; background: transparent; border: 1px solid rgba(212,168,71,.6); }
+  #stage { position: relative; flex: 1; min-height: 0; }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+  #hint { position: absolute; inset: 0; display: grid; place-items: center; padding: 30px; text-align: center; font-size: .9rem; line-height: 1.8; color: #9AA3AE; pointer-events: none; }
+  #panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); background: #1B212A; }
+  #panel label { display: flex; flex-direction: column; gap: 4px; font-size: .78rem; color: #B8BFC8; }
+  #panel span { display: flex; justify-content: space-between; }
+  #panel i { font-style: normal; color: #6E7884; }
+  input[type=range] { width: 100%; accent-color: #D4A847; }
+</style>
+</head>
+<body>
+<header>
+  <b>捏捏试玩</b>
+  <label class="btn">选图<input type="file" id="file" accept="image/*" hidden></label>
+  <button type="button" class="btn ghost" id="reset">复原</button>
+</header>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <p id="hint">点右上角"选图"挑一张<br>图片只在这台手机里打开，不会上传到任何地方</p>
+</div>
+<section id="panel">
+  <label><span>软硬 <i>软 ← → 硬</i></span><input type="range" id="soft" min="1" max="10" value="4"></label>
+  <label><span>陷多深 <i>浅 ← → 深</i></span><input type="range" id="depth" min="1" max="10" value="6"></label>
+  <label><span>抖几下 <i>少 ← → 多</i></span><input type="range" id="wobble" min="1" max="10" value="6"></label>
+  <label><span>手指大小 <i>小 ← → 大</i></span><input type="range" id="size" min="1" max="10" value="5"></label>
+</section>
+
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const hint = document.getElementById('hint');
+  const gl = cv.getContext('webgl', { antialias: true, alpha: false });
+  if (!gl) { hint.textContent = '这个浏览器打不开，换个浏览器试试'; return; }
+
+  // ---------- 网格 ----------
+  const N = 64, V = N * N;
+  const bx = new Float32Array(V), by = new Float32Array(V);
+  const dx = new Float32Array(V), dy = new Float32Array(V);
+  const vx = new Float32Array(V), vy = new Float32Array(V);
+  const z = new Float32Array(V), vz = new Float32Array(V);
+  const grab = new Float32Array(V);
+  const pos = new Float32Array(V * 2), uv = new Float32Array(V * 2), shade = new Float32Array(V);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const k = j * N + i;
+    bx[k] = i / (N - 1); by[k] = j / (N - 1);
+    uv[k * 2] = bx[k]; uv[k * 2 + 1] = by[k];
+  }
+  const idx = new Uint16Array((N - 1) * (N - 1) * 6);
+  let t = 0;
+  for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
+    const a = j * N + i, b = a + 1, c = a + N, d = c + 1;
+    idx.set([a, c, b, b, c, d], t); t += 6;
+  }
+
+  // ---------- 着色器 ----------
+  const vs = `attribute vec2 aPos; attribute vec2 aUv; attribute float aShade;
+    uniform vec2 uScale; varying vec2 vUv; varying float vS;
+    void main(){ vUv=aUv; vS=aShade; gl_Position=vec4((aPos.x*2.0-1.0)*uScale.x,(1.0-aPos.y*2.0)*uScale.y,0.0,1.0); }`;
+  const fs = `precision mediump float; uniform sampler2D uTex; varying vec2 vUv; varying float vS;
+    void main(){ vec3 c=texture2D(uTex,vUv).rgb; vec3 col=c*min(vS,1.0)+vec3(max(vS-1.0,0.0))*0.55; gl_FragColor=vec4(col,1.0); }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = (data, loc, size, usage) => {
+    const b = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, data, usage);
+    const l = gl.getAttribLocation(prog, loc);
+    gl.enableVertexAttribArray(l);
+    gl.vertexAttribPointer(l, size, gl.FLOAT, false, 0, 0);
+    return b;
+  };
+  const posBuf = buf(pos, 'aPos', 2, gl.DYNAMIC_DRAW);
+  buf(uv, 'aUv', 2, gl.STATIC_DRAW);
+  const shadeBuf = buf(shade, 'aShade', 1, gl.DYNAMIC_DRAW);
+  const ib = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  const uScale = gl.getUniformLocation(prog, 'uScale');
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  [[gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE],
+   [gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR]].forEach(([k, v]) => gl.texParameteri(gl.TEXTURE_2D, k, v));
+
+  let imgAspect = 0, sx = 1, sy = 1;
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(cv.clientWidth * dpr);
+    cv.height = Math.round(cv.clientHeight * dpr);
+    gl.viewport(0, 0, cv.width, cv.height);
+    if (!imgAspect) return;
+    const ca = cv.width / cv.height;
+    if (imgAspect > ca) { sx = 1; sy = ca / imgAspect; } else { sy = 1; sx = imgAspect / ca; }
+    gl.uniform2f(uScale, sx, sy);
+  }
+  window.addEventListener('resize', resize);
+
+  // ---------- 选图 ----------
+  document.getElementById('file').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const max = 2048, r = Math.min(1, max / Math.max(img.width, img.height));
+      const c2 = document.createElement('canvas');
+      c2.width = Math.round(img.width * r); c2.height = Math.round(img.height * r);
+      c2.getContext('2d').drawImage(img, 0, 0, c2.width, c2.height);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, c2);
+      imgAspect = c2.width / c2.height;
+      URL.revokeObjectURL(img.src);
+      hint.hidden = true;
+      reset();
+      resize();
+    };
+    img.onerror = () => { hint.textContent = '这张图打不开，换一张试试'; };
+    img.src = URL.createObjectURL(f);
+  });
+
+  function reset() { [dx, dy, vx, vy, z, vz].forEach((a) => a.fill(0)); }
+  document.getElementById('reset').addEventListener('click', reset);
+
+  // ---------- 手指 ----------
+  const fingers = new Map();
+  const toUv = (e) => {
+    const r = cv.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    const y = 1 - ((e.clientY - r.top) / r.height) * 2;
+    return [(x / sx + 1) / 2, (1 - y / sy) / 2];
+  };
+  cv.addEventListener('pointerdown', (e) => {
+    if (!imgAspect) return;
+    cv.setPointerCapture(e.pointerId);
+    const [x, y] = toUv(e);
+    fingers.set(e.pointerId, { x, y, lx: x, ly: y, held: 0 });
+    poke(x, y, 0.5);             // 刚按下去先"噗"地陷一下
+  });
+  cv.addEventListener('pointermove', (e) => {
+    const f = fingers.get(e.pointerId);
+    if (!f) return;
+    [f.x, f.y] = toUv(e);
+  });
+  const up = (e) => { const f = fingers.get(e.pointerId); if (f) { poke(f.x, f.y, -0.45); fingers.delete(e.pointerId); }   // 松手往外弹 };
+  cv.addEventListener('pointerup', up);
+  cv.addEventListener('pointercancel', up);
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  const val = (id) => Number(document.getElementById(id).value);
+  const radius = () => 0.06 + val('size') * 0.018;
+
+  // 给一圈速度（按下时往里，松手时往外弹）
+  function poke(x, y, s) {
+    const R = radius(), R2 = R * R;
+    for (let k = 0; k < V; k++) {
+      const rx = bx[k] + dx[k] - x, ry = by[k] + dy[k] - y, d2 = rx * rx + ry * ry;
+      if (d2 >= R2) continue;
+      const w = 1 - d2 / R2;
+      vz[k] += s * w * w * val('depth') * 0.012;
+    }
+  }
+
+  // ---------- 物理 ----------
+  function step() {
+    const kSpring = 0.012 + val('soft') * 0.009;
+    const damp = 0.78 + val('wobble') * 0.019;
+    const depth = val('depth') * 0.09;
+    const R = radius(), R2 = R * R;
+    grab.fill(0);
+
+    fingers.forEach((f) => {
+      const mx = f.x - f.lx, my = f.y - f.ly;
+      f.lx = f.x; f.ly = f.y;
+      f.held = Math.min(1, f.held + 0.06);
+      for (let k = 0; k < V; k++) {
+        const px = bx[k] + dx[k], py = by[k] + dy[k];
+        const rx = px - f.x, ry = py - f.y, d2 = rx * rx + ry * ry;
+        if (d2 >= R2) continue;
+        const w0 = 1 - d2 / R2, w = w0 * w0;
+        grab[k] = Math.max(grab[k], w);
+        dx[k] += mx * w * 0.95;            // 肉被手指带着走
+        dy[k] += my * w * 0.95;
+        dx[k] -= rx * w * 0.02 * f.held;   // 往手指底下挤，看着像陷进去
+        dy[k] -= ry * w * 0.02 * f.held;
+        vz[k] += (w * depth * f.held - z[k]) * 0.22;
+      }
+    });
+
+    for (let j = 1; j < N - 1; j++) for (let i = 1; i < N - 1; i++) {
+      const k = j * N + i;
+      const lapX = (dx[k - 1] + dx[k + 1] + dx[k - N] + dx[k + N]) * 0.25 - dx[k];
+      const lapY = (dy[k - 1] + dy[k + 1] + dy[k - N] + dy[k + N]) * 0.25 - dy[k];
+      const lapZ = (z[k - 1] + z[k + 1] + z[k - N] + z[k + N]) * 0.25 - z[k];
+      const ks = kSpring * (1 - grab[k] * 0.97);
+      vx[k] = (vx[k] - ks * dx[k] + lapX * 0.3) * damp;
+      vy[k] = (vy[k] - ks * dy[k] + lapY * 0.3) * damp;
+      vz[k] = (vz[k] - kSpring * 1.3 * z[k] * (1 - grab[k]) + lapZ * 0.3) * damp;
+    }
+    for (let k = 0; k < V; k++) {
+      dx[k] += vx[k]; dy[k] += vy[k]; z[k] += vz[k];
+      if (dx[k] > 0.22) dx[k] = 0.22; else if (dx[k] < -0.22) dx[k] = -0.22;
+      if (dy[k] > 0.22) dy[k] = 0.22; else if (dy[k] < -0.22) dy[k] = -0.22;
+      if (z[k] > 1.2) z[k] = 1.2; else if (z[k] < -0.6) z[k] = -0.6;
+    }
+    // 最外一圈钉住，边上不会露出黑边
+    for (let i = 0; i < N; i++) {
+      [i, (N - 1) * N + i, i * N, i * N + N - 1].forEach((k) => { dx[k] = dy[k] = vx[k] = vy[k] = z[k] = vz[k] = 0; });
+    }
+  }
+
+  function draw() {
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const k = j * N + i;
+      pos[k * 2] = bx[k] + dx[k];
+      pos[k * 2 + 1] = by[k] + dy[k];
+      // 陷下去的地方暗一点，坑边朝光的一面亮一点
+      const gx = (i > 0 && i < N - 1) ? z[k - 1] - z[k + 1] : 0;
+      const gy = (j > 0 && j < N - 1) ? z[k - N] - z[k + N] : 0;
+      let s = 1 - z[k] * 0.32 - (gx + gy) * (N / 9);
+      shade[k] = s < 0.45 ? 0.45 : s > 1.35 ? 1.35 : s;
+    }
+    gl.clearColor(0.078, 0.094, 0.122, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    if (!imgAspect) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, pos);
+    gl.bindBuffer(gl.ARRAY_BUFFER, shadeBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, shade);
+    gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
+  }
+
+  function loop() { if (imgAspect) step(); draw(); requestAnimationFrame(loop); }
+  resize();
+  loop();
+})();
+</script>
+</body>
+</html>
