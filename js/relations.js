@@ -1,8 +1,9 @@
 // 人物关系：按时期分组的人物名单，点开一个人看介绍和糖点经历
 // 人物 = submissions 里 kind='person' 的行；糖点 = kind='upload' 且 person_id 指向这个人
 
-import { mountComments, countComments } from './comments.js?v=20261101a';
-import { showShare } from './share.js?v=20261101a';
+import { mountComments, countComments } from './comments.js?v=20261101d';
+import { showShare } from './share.js?v=20261101d';
+import { openLightbox } from './lightbox.js?v=20261101d';
 
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
@@ -203,12 +204,14 @@ function toggle(item, btn, panel, p, force) {
 function fillPanel(panel, p) {
   const top = el('div', 'pp-top');
   if (p.image_paths && p.image_paths.length) {
+    const all = p.image_paths.map(imgUrl);
     const a = el('a', 'pp-photo');
-    a.href = imgUrl(p.image_paths[0]);
+    a.href = all[0];
     a.target = '_blank';
     a.rel = 'noopener';
+    a.addEventListener('click', (e) => { e.preventDefault(); openLightbox(all, 0); });
     const img = el('img');
-    img.src = imgUrl(p.image_paths[0]);
+    img.src = all[0];
     img.alt = p.summary;
     a.append(img);
     top.append(a);
@@ -284,15 +287,18 @@ function moment(m) {
   if (m.detail) li.append(el('p', 'mm-detail', m.detail));
 
   if (m.image_paths && m.image_paths.length) {
+    const all = m.image_paths.map(imgUrl);
     const g = el('div', 'mm-gallery');
-    m.image_paths.forEach((path) => {
+    all.forEach((u, i) => {
       const a = el('a');
-      a.href = imgUrl(path);
+      a.href = u;
       a.target = '_blank';
       a.rel = 'noopener';
+      // 点开用大图浏览器，左右滑着看同一条糖点里的其他图
+      a.addEventListener('click', (e) => { e.preventDefault(); openLightbox(all, i); });
       const img = el('img');
       img.loading = 'lazy';
-      img.src = imgUrl(path);
+      img.src = u;
       img.alt = m.summary;
       a.append(img);
       g.append(a);

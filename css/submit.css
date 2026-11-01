@@ -432,3 +432,34 @@ body.no-scroll { overflow: hidden; }
 .acct-since { font-size: 0.88rem; color: var(--text-light); margin-bottom: 14px; }
 .acct-out { background: transparent !important; color: var(--text) !important; border: 1px solid #D5DEE6 !important; }
 .acct-in .done-actions, #acctIn .done-actions { margin-top: 16px; }
+
+/* --- 图片顺序：缩略图上的序号、挪动按钮、再加一张 --- */
+.preview { align-items: flex-start; }
+.pv-item { padding-bottom: 22px; }
+.pv-item.dragging { opacity: 0.45; }
+.pv-item.drop-here { outline: 2px dashed var(--sun); outline-offset: 2px; border-radius: var(--radius-sm); }
+.pv-no {
+  position: absolute; top: 3px; left: 3px;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  font-size: 0.68rem; line-height: 17px; text-align: center;
+  color: #fff; background: rgba(30, 42, 56, 0.82);
+  border-radius: 9px;
+}
+.pv-move { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 4px; }
+.pv-move button {
+  flex: 1; height: 19px; padding: 0;
+  font-size: 0.78rem; line-height: 1;
+  color: var(--dark); background: #EEF2F5;
+  border: 1px solid #DCE3E8; border-radius: 4px; cursor: pointer;
+}
+.pv-move button:hover:not(:disabled) { background: var(--sun); border-color: var(--sun); color: #fff; }
+.pv-move button:disabled { opacity: 0.3; cursor: default; }
+.preview.avatar .pv-item { padding-bottom: 0; }
+.pic-hint { margin: 8px 0 0; font-size: 0.76rem; line-height: 1.6; color: var(--text-light); }
+.add-more {
+  margin-top: 8px; padding: 7px 14px;
+  font-size: 0.82rem; color: var(--dark);
+  background: #fff; border: 1px dashed var(--sun);
+  border-radius: var(--radius-sm); cursor: pointer;
+}
+.add-more:hover { background: #FDF8EC; }

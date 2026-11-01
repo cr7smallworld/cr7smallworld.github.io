@@ -1,6 +1,7 @@
 // Supabase 库放在 js/vendor/supabase.js 里，由页面先加载，不依赖外部CDN
-import { mountComments } from './comments.js?v=20261101a';
-import { showShare } from './share.js?v=20261101a';
+import { mountComments } from './comments.js?v=20261101d';
+import { showShare } from './share.js?v=20261101d';
+import { openLightbox } from './lightbox.js?v=20261101d';
 
 // 公开钥匙：只能读"审核通过"的投稿
 const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
@@ -192,20 +193,24 @@ function openDetail(it) {
   if (caption(it)) box.append(el('h2', 'm-title', caption(it)));
 
   if (it.image_paths && it.image_paths.length) {
-    const gal = el('div', 'm-gallery' + (it.image_paths.length === 1 ? ' single' : ''));
-    it.image_paths.forEach((p) => {
+    const all = it.image_paths.map(imgUrl);
+    const gal = el('div', 'm-gallery' + (all.length === 1 ? ' single' : ''));
+    all.forEach((u, i) => {
       const a = el('a');
-      a.href = imgUrl(p);
+      a.href = u;
       a.target = '_blank';
       a.rel = 'noopener';
+      // 点开用大图浏览器，可以左右滑着看，不用退出去再点
+      a.addEventListener('click', (e) => { e.preventDefault(); openLightbox(all, i); });
       const img = el('img');
       img.loading = 'lazy';
-      img.src = imgUrl(p);
+      img.src = u;
       img.alt = it.summary;
       a.append(img);
       gal.append(a);
     });
     box.append(gal);
+    if (all.length > 1) box.append(el('p', 'gal-hint', `${all.length}张图，点开可以左右滑着看`));
   }
 
   const v = safeUrl(it.video_url);

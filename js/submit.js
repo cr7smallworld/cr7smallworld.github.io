@@ -36,7 +36,10 @@ const form = $('submitForm');
 const msg = $('formMsg');
 const btn = $('submitBtn');
 let kind = 'upload';
-let files = [];
+// 选好的图按顺序排在这里：{ file } 是这次新选的，{ path } 是编辑时原来就有的
+let picked = [];
+const newFiles = () => picked.filter((p) => p.file).map((p) => p.file);
+const oldPaths = () => picked.filter((p) => p.path).map((p) => p.path);
 let target = null;   // 补充/纠错时，指向网站上已有的那一条
 let relMode = 'moment';  // 人物关系板块上传时：moment=糖点经历，person=添加人物
 let people = null;       // 已收录的人物（选"是谁"用），用到时才去读
@@ -202,8 +205,8 @@ function updateRel() {
     ? '头像照片 <span class="opt">选填，1张</span>'
     : '上传图片 <span class="opt">选填，最多9张</span>';
   const wasAvatar = $('preview').classList.contains('avatar');
-  if ((person && files.length && !avatarSource) || (!person && wasAvatar)) {
-    files = [];
+  if ((person && picked.length && !avatarSource) || (!person && wasAvatar)) {
+    picked = [];
     avatarSource = null;
     $('images').value = '';
     $('preview').innerHTML = '';
@@ -299,36 +302,56 @@ async function loadPeople() {
 // ---------- 人物头像：选完图先弹出裁剪框 ----------
 let avatarSource = null;   // 原图留着，方便"重新调整"
 let editing = null;        // 编辑自己的投稿时：{ token, id, kind, status, ... }
-let existingPaths = [];    // 编辑时，这条原来就有的图
 const imgUrl = (p) => supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl;
 
 function showPreview() {
   const preview = $('preview');
   preview.innerHTML = '';
   const avatar = isRelUpload() && relMode === 'person';
-  if (avatar && files.length) existingPaths = [];
-  preview.classList.toggle('avatar', avatar && (files.length > 0 || existingPaths.length > 0));
-  const thumb = (src, onRemove, revoke) => {
+  preview.classList.toggle('avatar', avatar && picked.length > 0);
+
+  picked.forEach((it, i) => {
+    if (!it.url) it.url = it.file ? URL.createObjectURL(it.file) : imgUrl(it.path);
     const wrap = document.createElement('span');
     wrap.className = 'pv-item';
+    wrap.draggable = !avatar;
+    wrap.dataset.i = String(i);
+
     const img = document.createElement('img');
-    img.src = src;
-    if (revoke) img.onload = () => URL.revokeObjectURL(src);
+    img.src = it.url;
     wrap.append(img);
-    if (editing && !avatar) {
+
+    if (!avatar) {
+      // 第几张（也就是网站上显示的顺序）
+      wrap.append(Object.assign(document.createElement('span'), { className: 'pv-no', textContent: String(i + 1) }));
+
       const x = document.createElement('button');
       x.type = 'button';
       x.className = 'pv-del';
       x.setAttribute('aria-label', '去掉这张');
       x.textContent = '×';
-      x.addEventListener('click', onRemove);
+      x.addEventListener('click', () => { picked.splice(i, 1); showPreview(); });
       wrap.append(x);
+
+      // 左右挪一格（手机上点着挪最稳）
+      const bar = document.createElement('span');
+      bar.className = 'pv-move';
+      const mk = (txt, to, label) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = txt;
+        b.setAttribute('aria-label', label);
+        b.disabled = to < 0 || to > picked.length - 1;
+        b.addEventListener('click', () => { swap(i, to); });
+        return b;
+      };
+      bar.append(mk('‹', i - 1, '往前挪'), mk('›', i + 1, '往后挪'));
+      wrap.append(bar);
     }
     preview.append(wrap);
-  };
-  existingPaths.forEach((p, i) => thumb(imgUrl(p), () => { existingPaths.splice(i, 1); showPreview(); }));
-  files.forEach((f, i) => thumb(URL.createObjectURL(f), () => { files.splice(i, 1); showPreview(); }, true));
-  if (avatar && files.length && avatarSource) {
+  });
+
+  if (avatar && picked.length && avatarSource) {
     const again = document.createElement('button');
     again.type = 'button';
     again.className = 'crop-again';
@@ -336,7 +359,61 @@ function showPreview() {
     again.addEventListener('click', () => openCrop(avatarSource));
     preview.append(again);
   }
+
+  // 还能再加几张
+  const hint = $('picHint');
+  if (hint) {
+    if (avatar) hint.textContent = '';
+    else if (!picked.length) hint.textContent = '';
+    else hint.textContent = picked.length >= MAX_IMAGES
+      ? `已经选了 ${picked.length} 张，满了`
+      : `已经选了 ${picked.length} 张，还能再加 ${MAX_IMAGES - picked.length} 张。左右小箭头可以调顺序，电脑上也能拖着挪`;
+  }
+  const more = $('addMore');
+  if (more) more.hidden = avatar || !picked.length || picked.length >= MAX_IMAGES;
 }
+
+function swap(a, b) {
+  if (b < 0 || b > picked.length - 1) return;
+  [picked[a], picked[b]] = [picked[b], picked[a]];
+  showPreview();
+}
+
+// 电脑上拖着缩略图换位置
+(function bindDrag() {
+  const preview = $('preview');
+  if (!preview) return;
+  let from = -1;
+  preview.addEventListener('dragstart', (e) => {
+    const it = e.target.closest('.pv-item');
+    if (!it) return;
+    from = +it.dataset.i;
+    it.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(from));
+  });
+  preview.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const it = e.target.closest('.pv-item');
+    [...preview.children].forEach((c) => c.classList.remove('drop-here'));
+    if (it && +it.dataset.i !== from) it.classList.add('drop-here');
+  });
+  preview.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const it = e.target.closest('.pv-item');
+    if (!it || from < 0) return;
+    const to = +it.dataset.i;
+    if (to === from) return;
+    const [m] = picked.splice(from, 1);
+    picked.splice(to, 0, m);
+    from = -1;
+    showPreview();
+  });
+  preview.addEventListener('dragend', () => {
+    from = -1;
+    [...preview.children].forEach((c) => c.classList.remove('dragging', 'drop-here'));
+  });
+})();
 
 async function openCrop(src) {
   let source = src;
@@ -351,7 +428,7 @@ async function openCrop(src) {
     const blob = await cropAvatar(source);
     if (!blob) return false;
     avatarSource = source;
-    files = [new File([blob], 'avatar.jpg', { type: 'image/jpeg' })];
+    picked = [{ file: new File([blob], 'avatar.jpg', { type: 'image/jpeg' }) }];
     showPreview();
     return true;
   } catch (_) {
@@ -372,14 +449,19 @@ $('images').addEventListener('change', async (e) => {
     return;
   }
   avatarSource = null;
-  const max = MAX_IMAGES - existingPaths.length;
-  if (max <= 0) { e.target.value = ''; return showMsg('已经有9张图了，先去掉几张再加', 'warn'); }
-  files = [...(editing ? files : []), ...Array.from(e.target.files)].slice(0, max);
+  const room = MAX_IMAGES - picked.length;
+  if (room <= 0) { e.target.value = ''; return showMsg('已经有9张图了，先去掉几张再加', 'warn'); }
+  const add = Array.from(e.target.files);
+  // 一张一张按选的顺序接在后面，可以分几次选，不会把之前选的冲掉
+  picked = [...picked, ...add.slice(0, room).map((f) => ({ file: f }))];
   e.target.value = '';
-  if (files.length >= max && e.target.files.length > max) showMsg(`最多9张，多出来的没加上`, 'warn');
+  if (add.length > room) showMsg(`最多9张，多出来的${add.length - room}张没加上`, 'warn');
   else showMsg('');
   showPreview();
 });
+
+// "+ 再加一张"：就是再打开一次相册，选的图接在后面
+if ($('addMore')) $('addMore').addEventListener('click', () => $('images').click());
 
 // ---------- 图片压缩 ----------
 // 看文件开头几个字节判断真实格式，不信文件名和浏览器报的类型
@@ -522,7 +604,9 @@ async function uploadWithRetry(path, blob, n, total) {
   }
 }
 
-async function uploadImages() {
+// 按 picked 里的顺序传，第几张就是网站上显示的第几张
+async function uploadImages(list) {
+  const files = list || newFiles();
   const paths = [];
   const folder = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}`;
   for (let i = 0; i < files.length; i++) {
@@ -581,7 +665,7 @@ form.addEventListener('submit', async (e) => {
   if (!section) return showMsg('请选择投稿板块', 'error');
   if (relMoment && !personId) return showMsg('请选一下是谁和他之间的事', 'error');
   const spicyUpload = kind === 'upload' && section === 'spicy';
-  if (spicyUpload && !files.length) return showMsg('🦌管素材要传至少一张图', 'error');
+  if (spicyUpload && !picked.length) return showMsg('🦌管素材要传至少一张图', 'error');
   if (!summary && !spicyUpload) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
   if (target && kind !== 'upload' && !$('detail').value.trim()) {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
@@ -598,7 +682,7 @@ form.addEventListener('submit', async (e) => {
 
   btn.disabled = true;
   try {
-    const image_paths = files.length ? await uploadImages() : [];
+    const image_paths = picked.length ? await uploadImages() : [];
     showMsg('正在提交…');
     const token = newToken();
     const row = {
@@ -654,7 +738,7 @@ form.addEventListener('submit', async (e) => {
 
 $('again').addEventListener('click', () => {
   form.reset();
-  files = [];
+  picked = [];
   avatarSource = null;
   $('preview').innerHTML = '';
   $('preview').classList.remove('avatar');
@@ -752,7 +836,8 @@ async function startEdit(id) {
     $('fwPlatformOther').hidden = opt;
     if (!opt) $('fwPlatformOther').value = d.fanwork_platform;
   }
-  existingPaths = [...(d.image_paths || [])];
+  // 编辑时：原来的图和新加的图排在同一队里，可以一起调顺序
+  picked = (d.image_paths || []).map((p) => ({ path: p }));
   showPreview();
   btn.textContent = '提交修改';
   $('submitBtn').nextElementSibling.textContent = '修改也要站长审核通过才会生效';
@@ -775,8 +860,12 @@ async function submitEdit() {
 
   btn.disabled = true;
   try {
-    const added = files.length ? await uploadImages() : [];
-    const image_paths = person ? (added.length ? added : existingPaths).slice(0, 1) : [...existingPaths, ...added].slice(0, MAX_IMAGES);
+    const fresh = newFiles();
+    const added = fresh.length ? await uploadImages(fresh) : [];
+    // 按预览里排好的顺序拼：老图用原路径，新图用刚传上去的路径
+    let q = 0;
+    const ordered = picked.map((it) => (it.path ? it.path : added[q++])).filter(Boolean);
+    const image_paths = person ? ordered.slice(0, 1) : ordered.slice(0, MAX_IMAGES);
     showMsg('正在提交修改…');
     const data = {
       summary: summary || (spicyEdit ? '🦌' : summary),
