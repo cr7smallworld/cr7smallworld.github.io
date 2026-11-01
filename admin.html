@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=20261101f">
-  <link rel="stylesheet" href="css/admin.css?v=20261101f">
-  <link rel="stylesheet" href="css/polish.css?v=20261101f">
+  <link rel="stylesheet" href="css/admin.css?v=20261101j">
+  <link rel="stylesheet" href="css/polish.css?v=20261101j">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -39,6 +39,7 @@
         <button type="button" data-view="fb">留言 <b id="cFbUnread">0</b></button>
         <button type="button" data-view="cmt">评论 <b id="cCmtNew">0</b></button>
         <button type="button" data-view="ann">公告</button>
+        <button type="button" data-view="stats">数据</button>
       </div>
       <div id="subView">
       <div class="admin-bar">
@@ -111,11 +112,19 @@
         <p class="admin-msg" id="annMsg" role="status"></p>
         <div id="annList"></div>
       </div>
+      <div id="statsView" hidden>
+        <div class="admin-bar">
+          <p class="edit-hint">全站情况一眼看完，时间按北京时间算</p>
+          <div class="admin-tools"><button type="button" id="statsRefresh">刷新</button></div>
+        </div>
+        <p class="admin-msg" id="statsMsg" role="status"></p>
+        <div id="statsBox"></div>
+      </div>
     </div>
 
   </main>
 
   <script src="js/vendor/supabase.js"></script>
-  <script type="module" src="js/admin.js?v=20261101f"></script>
+  <script type="module" src="js/admin.js?v=20261101j"></script>
 </body>
 </html>

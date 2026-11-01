@@ -15,7 +15,7 @@ const SECTION = document.body.dataset.section;
 const SPICY = SECTION === 'spicy';
 // 精彩二创：没有事件时间，年份筛选换成按作品分类筛选
 const FW = SECTION === 'fanworks';
-const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '其它'];
+const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '表情包', '其它'];
 const $ = (id) => document.getElementById(id);
 
 const state = { all: [], q: '', club: '', year: '', tag: '', sort: 'desc' };

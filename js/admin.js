@@ -271,7 +271,7 @@ async function openFix(it, card, note, btn) {
     if (type === 'textarea') { inp = el('textarea'); inp.rows = 4; }
     else if (type === 'fwtype') {
       inp = el('select');
-      ['混剪', '同人文', '同人图', '修图', '其它'].forEach((o) => inp.append(new Option(o, o)));
+      ['混剪', '同人文', '同人图', '修图', '表情包', '其它'].forEach((o) => inp.append(new Option(o, o)));
     } else { inp = el('input'); inp.type = 'text'; }
     if (LIMITS[k]) inp.maxLength = LIMITS[k];
     inp.value = type === 'tags' ? (t.tags || []).join('，') : (t[k] || '');
@@ -390,6 +390,8 @@ document.querySelectorAll('#viewTabs button').forEach((b) => b.addEventListener(
   $('fbView').hidden = b.dataset.view !== 'fb';
   $('cmtView').hidden = b.dataset.view !== 'cmt';
   $('annView').hidden = b.dataset.view !== 'ann';
+  $('statsView').hidden = b.dataset.view !== 'stats';
+  if (b.dataset.view === 'stats') loadStats();
   if (b.dataset.view === 'cmt') markCmtSeen();
   if (b.dataset.view === 'ann') loadAnns();
 }));
@@ -790,3 +792,56 @@ $('annPostBtn').addEventListener('click', async () => {
   msg('annMsg', '发布成功', 'ok');
   loadAnns();
 });
+
+// ================= 数据面板 =================
+const STAT_SECTION = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
+function statLink(it) {
+  if (it.section === 'relations') return `relations.html?${it.kind === 'person' ? 'p' : 'id'}=${it.id}`;
+  return `${it.section}.html?id=${it.id}`;
+}
+async function loadStats() {
+  msg('statsMsg', '加载中…');
+  const { data, error } = await supabase.rpc('admin_stats');
+  if (error) return msg('statsMsg', '加载失败：' + error.message, 'error');
+  msg('statsMsg', '');
+  const box = $('statsBox');
+  box.replaceChildren();
+  const t = data.totals || {};
+  const grid = el('div', 'st-grid');
+  [['已通过投稿', t.approved], ['待审核', t.pending], ['注册账号', t.members], ['评论', t.comments], ['收藏', t.favorites]]
+    .forEach(([k, v]) => { const c = el('div', 'st-cell'); c.append(el('b', null, String(v ?? 0)), el('span', null, k)); grid.append(c); });
+  box.append(grid);
+
+  box.append(el('h3', 'st-h', '各板块收录'));
+  const sec = el('div', 'st-tags');
+  Object.keys(STAT_SECTION).forEach((k) => sec.append(el('span', null, `${STAT_SECTION[k]} ${(data.sections || {})[k] || 0}`)));
+  box.append(sec);
+
+  box.append(el('h3', 'st-h', '最近7天'));
+  const tb = el('table', 'st-table');
+  const head = el('tr');
+  ['日期', '新投稿', '新注册', '新评论'].forEach((h) => head.append(el('th', null, h)));
+  tb.append(head);
+  (data.days || []).slice().reverse().forEach((d) => {
+    const tr = el('tr');
+    [d.d.slice(5).replace('-', '月') + '日', d.subs, d.members, d.comments].forEach((v) => tr.append(el('td', null, String(v))));
+    tb.append(tr);
+  });
+  box.append(tb);
+
+  [['评论最多', data.topComments, '条评论'], ['收藏最多', data.topFavs, '人收藏']].forEach(([title, list, unit]) => {
+    box.append(el('h3', 'st-h', title));
+    if (!list || !list.length) { box.append(el('p', 'st-empty', '还没有')); return; }
+    const ol = el('ol', 'st-rank');
+    list.forEach((it) => {
+      const li = el('li');
+      const a = el('a', null, it.summary);
+      a.href = statLink(it);
+      a.target = '_blank';
+      li.append(a, el('span', null, ` · ${STAT_SECTION[it.section] || ''} · ${it.n}${unit}`));
+      ol.append(li);
+    });
+    box.append(ol);
+  });
+}
+$('statsRefresh').addEventListener('click', loadStats);

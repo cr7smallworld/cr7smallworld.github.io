@@ -58,3 +58,23 @@ async function load() {
   });
 }
 load();
+
+// 首页最底下：C罗生日倒计时（按北京时间算）
+function birthday() {
+  const box = document.getElementById('bdayCard');
+  if (!box) return;
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()).split('-').map(Number);
+  const today = Date.UTC(p[0], p[1] - 1, p[2]);
+  let year = p[0];
+  if (p[1] > 2 || (p[1] === 2 && p[2] > 5)) year += 1;
+  const days = Math.round((Date.UTC(year, 1, 5) - today) / 86400000);
+  const age = year - 1985;
+  if (days === 0) {
+    box.classList.add('today');
+    document.getElementById('bdayMain').textContent = `今天是C罗${age}岁生日 🎂`;
+    document.getElementById('bdaySub').textContent = '生日快乐，克里斯蒂亚诺';
+  } else {
+    document.getElementById('bdayMain').innerHTML = `距离C罗${age}岁生日还有 <b>${days}</b> 天`;
+  }
+}
+birthday();

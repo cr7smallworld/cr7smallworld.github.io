@@ -656,3 +656,13 @@ html.lb-lock, html.lb-lock body { overflow: hidden; }
   .lb-cell { padding: 46px 8px 50px; }
 }
 .gal-hint { margin: -8px 0 14px; font-size: 0.8rem; color: var(--text-light, #7b8794); }
+
+/* 首页生日倒计时 */
+.bday-section { padding-top: 24px; padding-bottom: 64px; }
+.bday-card { max-width: 420px; margin: 0 auto; padding: 22px 20px; text-align: center; background: #fff; border: 1px solid #EADADA; border-radius: 14px; box-shadow: 0 4px 18px rgba(133, 2, 5, 0.06); }
+.bday-kicker { font-size: 0.75rem; letter-spacing: 0.12em; color: #850205; }
+.bday-main { margin-top: 8px; font-size: 1.05rem; color: var(--dark); }
+.bday-main b { font-size: 1.9rem; color: #850205; margin: 0 4px; font-variant-numeric: tabular-nums; }
+.bday-sub { margin-top: 6px; font-size: 0.8rem; color: var(--text-light); }
+.bday-card.today { background: #850205; border-color: #850205; }
+.bday-card.today .bday-kicker, .bday-card.today .bday-main, .bday-card.today .bday-sub { color: #fff; }
