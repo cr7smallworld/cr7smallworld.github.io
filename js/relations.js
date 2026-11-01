@@ -61,8 +61,11 @@ async function load() {
   const rows = data || [];
   state.people = rows.filter((r) => r.kind === 'person');
   state.moments = {};
+  state.photos = {};
+  // 带「合照」标签的进图库，其余是糖点经历
   rows.filter((r) => r.kind === 'upload' && r.person_id).forEach((m) => {
-    (state.moments[m.person_id] = state.moments[m.person_id] || []).push(m);
+    const box = (m.tags || []).includes('合照') ? state.photos : state.moments;
+    (box[m.person_id] = box[m.person_id] || []).push(m);
   });
   Object.values(state.moments).forEach((list) => list.sort((a, b) => {
     const ya = yearOf(a.event_date); const yb = yearOf(b.event_date);
@@ -235,6 +238,7 @@ function fillPanel(panel, p) {
   if (p.detail) info.append(el('p', 'pp-intro', p.detail));
   top.append(info);
   panel.append(top);
+  panel.append(gallery(p));
 
   const ms = state.moments[p.id] || [];
   const tl = el('div', 'pp-moments');
@@ -249,6 +253,8 @@ function fillPanel(panel, p) {
   const act = el('div', 'pp-actions');
   const add = el('a', 'pp-btn main', '＋ 投稿他们的糖点');
   add.href = `submit.html?kind=upload&section=relations&rel=moment&person=${p.id}`;
+  const addPhoto = el('a', 'pp-btn main', '＋ 上传合照');
+  addPhoto.href = `submit.html?kind=upload&section=relations&rel=photo&person=${p.id}`;
   const sup = el('a', 'pp-btn', '补充人物介绍');
   sup.href = `submit.html?kind=supplement&section=relations&target=${p.id}`;
   const fix = el('a', 'pp-btn', '人物介绍有错？去纠错');
@@ -266,7 +272,7 @@ function fillPanel(panel, p) {
   }, pic));
   const fav = el('button', 'pp-btn fav-btn');
   fav.type = 'button';
-  act.append(add, sup, fix, share, pic, window.cr7Account.favButton(fav, p.id));
+  act.append(add, addPhoto, sup, fix, share, pic, window.cr7Account.favButton(fav, p.id));
   panel.append(act);
 
   // 每条糖点底下一个可展开的小评论区，人物本身一个评论区
@@ -277,6 +283,57 @@ function fillPanel(panel, p) {
     });
   }
   mountComments(panel, supabase, p.id);
+}
+
+// 图库：这个人和C罗的合照，所有投稿的图拼成一面墙，点开左右滑着看
+function gallery(p) {
+  const list = state.photos[p.id] || [];
+  const box = el('div', 'pp-gallery');
+  const pics = [];
+  list.forEach((m) => (m.image_paths || []).forEach((path) => pics.push({ url: imgUrl(path), m })));
+  box.append(el('h3', 'pp-h', pics.length ? `与C罗的合照 · ${pics.length}张` : '与C罗的合照'));
+  if (!pics.length) {
+    const tip = el('p', 'pg-empty');
+    tip.append('还没有人上传他和C罗的合照，');
+    const a = el('a', null, '来传第一张');
+    a.href = `submit.html?kind=upload&section=relations&rel=photo&person=${p.id}`;
+    tip.append(a);
+    box.append(tip);
+    return box;
+  }
+  const all = pics.map((x) => x.url);
+  const grid = el('div', 'pg-grid');
+  pics.forEach((x, i) => {
+    const a = el('a', 'pg-item');
+    a.id = i === 0 || pics[i - 1].m !== x.m ? 'm-' + x.m.id : '';
+    if (!a.id) a.removeAttribute('id');
+    a.href = x.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = [x.m.summary !== '合照' ? x.m.summary : '', x.m.event_date].filter(Boolean).join(' · ');
+    a.addEventListener('click', (e) => { e.preventDefault(); openLightbox(all, i); });
+    const img = el('img');
+    img.loading = 'lazy';
+    img.src = x.url;
+    img.alt = a.title || `${p.summary}和C罗的合照`;
+    a.append(img);
+    grid.append(a);
+  });
+  box.append(grid);
+  // 每组照片的说明和投稿人
+  const notes = el('ul', 'pg-notes');
+  list.forEach((m) => {
+    const li = el('li');
+    const t = [m.summary !== '合照' ? m.summary : '', m.event_date].filter(Boolean).join(' · ');
+    if (t) li.append(el('b', null, t + ' '));
+    if (m.detail) li.append(el('span', null, m.detail + ' '));
+    const by = el('span', 'pg-by');
+    by.append(`${(m.image_paths || []).length}张 · 投稿：`, window.cr7Who(m.public_member, m.uploader || '匿名'));
+    li.append(by);
+    notes.append(li);
+  });
+  box.append(notes);
+  return box;
 }
 
 function moment(m) {
@@ -366,7 +423,7 @@ function openFromQuery() {
   if (!pid && id) {
     if (state.people.some((p) => p.id === id)) pid = id;
     else {
-      for (const [k, list] of Object.entries(state.moments)) {
+      for (const [k, list] of [...Object.entries(state.moments), ...Object.entries(state.photos)]) {
         if (list.some((m) => m.id === id)) { pid = k; mid = id; break; }
       }
     }

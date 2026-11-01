@@ -172,7 +172,7 @@ document.querySelectorAll('.rel-opt').forEach((b) => b.addEventListener('click',
 }));
 {
   const r = new URLSearchParams(location.search).get('rel');
-  if (r === 'person' || r === 'moment') relMode = r;
+  if (r === 'person' || r === 'moment' || r === 'photo') relMode = r;
 }
 updateRel();
 
@@ -184,8 +184,10 @@ function updateRel() {
   if (!$('relModeField')) return;
   const rel = isRelUpload();
   const person = rel && relMode === 'person';
+  const photo = rel && relMode === 'photo';
   $('relModeField').hidden = !rel;
   $('personPickField').hidden = !rel || person;
+  $('personPickLabel').innerHTML = photo ? '是谁和C罗的合照 <em>必填</em>' : '是谁和他之间的事 <em>必填</em>';
   document.querySelectorAll('.rel-opt').forEach((b) => {
     b.classList.toggle('active', b.dataset.rel === relMode);
     b.setAttribute('aria-checked', String(b.dataset.rel === relMode));
@@ -194,16 +196,16 @@ function updateRel() {
   document.querySelectorAll('.not-person').forEach((n) => (n.hidden = person));
 
   if (kind === 'upload') {
-    $('summaryLabel').innerHTML = person ? '名字 <em>必填</em>' : `${KINDS.upload.summaryLabel} <em>必填</em>`;
-    $('summary').placeholder = person ? '例如：费迪南德' : (rel ? '例如：08年欧冠夺冠后抱在一起哭' : KINDS.upload.summaryPlaceholder);
+    $('summaryLabel').innerHTML = person ? '名字 <em>必填</em>' : (photo ? '照片说明 <span class="opt">选填</span>' : `${KINDS.upload.summaryLabel} <em>必填</em>`);
+    $('summary').placeholder = person ? '例如：费迪南德' : (photo ? '例如：2008年莫斯科欧冠夺冠后的合影' : (rel ? '例如：08年欧冠夺冠后抱在一起哭' : KINDS.upload.summaryPlaceholder));
     if (!target) {
-      $('detailLabel').innerHTML = person ? '简略介绍 <span class="opt">选填</span>' : '详细介绍 <span class="opt">选填</span>';
+      $('detailLabel').innerHTML = person ? '简略介绍 <span class="opt">选填</span>' : (photo ? '补充说明 <span class="opt">选填</span>' : '详细介绍 <span class="opt">选填</span>');
       $('detail').placeholder = person ? '他是谁，和他是什么关系，一两段话就好' : '';
     }
   }
   $('imagesLabel').innerHTML = person
     ? '头像照片 <span class="opt">选填，1张</span>'
-    : '上传图片 <span class="opt">选填，最多9张</span>';
+    : (photo ? '合照 <em>必填</em> <span class="opt">最多9张</span>' : '上传图片 <span class="opt">选填，最多9张</span>');
   const wasAvatar = $('preview').classList.contains('avatar');
   if ((person && picked.length && !avatarSource) || (!person && wasAvatar)) {
     picked = [];
@@ -249,7 +251,10 @@ function updateFw() {
       $('imagesLabel').innerHTML = '上传图片 <span class="opt">选填，最多9张</span>';
     }
   }
-  $('summary').required = !spicy;
+  const photoMode = isRelUpload() && relMode === 'photo';
+  $('summary').required = !spicy && !photoMode;
+  // 合照：不要视频链接和标签
+  if (photoMode) document.querySelectorAll('.not-photo').forEach((n) => { n.hidden = true; });
 }
 
 FW_TYPES.forEach((t) => {
@@ -660,13 +665,15 @@ form.addEventListener('submit', async (e) => {
   const videoUrl = $('videoUrl').value.trim();
 
   const relPerson = kind === 'upload' && section === 'relations' && relMode === 'person';
-  const relMoment = kind === 'upload' && section === 'relations' && relMode === 'moment';
+  const relPhoto = kind === 'upload' && section === 'relations' && relMode === 'photo';
+  const relMoment = kind === 'upload' && section === 'relations' && (relMode === 'moment' || relPhoto);
   const personId = relMoment ? $('personPick').value : '';
   if (!section) return showMsg('请选择投稿板块', 'error');
-  if (relMoment && !personId) return showMsg('请选一下是谁和他之间的事', 'error');
+  if (relMoment && !personId) return showMsg(relPhoto ? '请选一下是谁和C罗的合照' : '请选一下是谁和他之间的事', 'error');
+  if (relPhoto && !picked.length) return showMsg('合照至少要传一张图', 'error');
   const spicyUpload = kind === 'upload' && section === 'spicy';
   if (spicyUpload && !picked.length) return showMsg('🦌管素材要传至少一张图', 'error');
-  if (!summary && !spicyUpload) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
+  if (!summary && !spicyUpload && !relPhoto) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
   if (target && kind !== 'upload' && !$('detail').value.trim()) {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
   }
@@ -711,6 +718,7 @@ form.addEventListener('submit', async (e) => {
       });
     }
     if (relMoment) row.person_id = personId;
+    if (relPhoto) Object.assign(row, { summary: summary || '合照', tags: ['合照'], video_url: null });
     if (fwUpload) {
       Object.assign(row, {
         event_date: null,
@@ -788,7 +796,7 @@ async function startEdit(id) {
   editing = { token, ...d };
   kind = 'upload';
   $('section').value = d.section;
-  relMode = d.kind === 'person' ? 'person' : 'moment';
+  relMode = d.kind === 'person' ? 'person' : ((d.tags || []).includes('合照') ? 'photo' : 'moment');
   updateRel();
 
   // 板块、投什么、挂在谁下面都不能改
@@ -849,7 +857,9 @@ async function submitEdit() {
   const summary = $('summary').value.trim();
   const videoUrl = $('videoUrl').value.trim();
   const spicyEdit = editing.section === 'spicy';
-  if (!summary && !spicyEdit) return showMsg(person ? '请填写名字' : '请填写一句话介绍', 'error');
+  const photoEdit = editing.section === 'relations' && relMode === 'photo';
+  if (photoEdit && !picked.length) return showMsg('合照至少要留一张图', 'error');
+  if (!summary && !spicyEdit && !photoEdit) return showMsg(person ? '请填写名字' : '请填写一句话介绍', 'error');
   if (videoUrl && !/^https?:\/\//i.test(videoUrl)) return showMsg('链接要以 http:// 或 https:// 开头', 'error');
   const fwType = (form.querySelector('input[name="fwType"]:checked') || {}).value || '';
   const fwPlatform = $('fwPlatform').value === '__other' ? $('fwPlatformOther').value.trim() : $('fwPlatform').value;
@@ -868,14 +878,14 @@ async function submitEdit() {
     const image_paths = person ? ordered.slice(0, 1) : ordered.slice(0, MAX_IMAGES);
     showMsg('正在提交修改…');
     const data = {
-      summary: summary || (spicyEdit ? '🦌' : summary),
+      summary: summary || (spicyEdit ? '🦌' : (photoEdit ? '合照' : summary)),
       event_date: person || fw ? null : clean($('eventDate').value),
       detail: clean($('detail').value),
       source: fw ? null : clean($('source').value),
-      tags: person ? Array.from($('clubPicker').querySelectorAll('input:checked')).map((i) => i.value) : collectTags(),
+      tags: person ? Array.from($('clubPicker').querySelectorAll('input:checked')).map((i) => i.value) : (photoEdit ? ['合照'] : collectTags()),
       uploader: clean($('uploader').value),
       image_paths,
-      video_url: person ? null : (videoUrl || null),
+      video_url: person || photoEdit ? null : (videoUrl || null),
       person_role: person ? clean($('personRole').value) : null,
       person_alias: person ? clean($('personAlias').value) : null,
       fanwork_type: fw ? fwType : null,

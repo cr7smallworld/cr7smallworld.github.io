@@ -287,7 +287,7 @@
 .done-actions { flex-wrap: wrap; }
 
 /* --- 人物关系：糖点经历 / 添加人物 --- */
-.rel-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rel-mode { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .rel-opt {
   display: flex;
   flex-direction: column;

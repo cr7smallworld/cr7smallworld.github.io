@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css?v=20261101f">
-  <link rel="stylesheet" href="css/submit.css?v=20261101f">
+  <link rel="stylesheet" href="css/submit.css?v=20261101i">
   <link rel="stylesheet" href="css/polish.css?v=20261101f">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
 </head>
@@ -76,12 +76,13 @@
           <label>投什么 <em>必填</em></label>
           <div class="rel-mode" role="radiogroup">
             <button type="button" class="rel-opt" data-rel="moment"><b>糖点经历</b><span>给名单里已有的人加一段他们之间的事</span></button>
+            <button type="button" class="rel-opt" data-rel="photo"><b>合照</b><span>给名单里已有的人上传他和C罗的合照</span></button>
             <button type="button" class="rel-opt" data-rel="person"><b>添加人物</b><span>名单里还没有这个人，把他加进来</span></button>
           </div>
         </div>
 
         <div class="field rel-only" id="personPickField" hidden>
-          <label for="personPick">是谁和他之间的事 <em>必填</em></label>
+          <label for="personPick" id="personPickLabel">是谁和他之间的事 <em>必填</em></label>
           <select id="personPick"><option value="">请选择人物</option></select>
           <span class="hint" id="personPickHint">名单里没有这个人？先切到"添加人物"把他加进来，审核通过后就能选了</span>
         </div>
@@ -117,7 +118,7 @@
           <button type="button" class="add-more" id="addMore" hidden>+ 再加一张</button>
         </div>
 
-        <div class="field not-person not-spicy">
+        <div class="field not-person not-spicy not-photo">
           <label for="videoUrl" id="videoLabel">视频链接 <span class="opt">选填</span></label>
           <input type="url" id="videoUrl" maxlength="500" placeholder="B站、微博、YouTube 等视频地址">
         </div>
@@ -154,7 +155,7 @@
           <input type="text" id="source" maxlength="300" placeholder="原视频、原帖、杂志名称等">
         </div>
 
-        <div class="field not-person not-spicy">
+        <div class="field not-person not-spicy not-photo">
           <label>标签 <span class="opt">选填</span></label>
           <div class="tag-picker" id="tagPicker"></div>
           <input type="text" id="customTags" maxlength="100" placeholder="自定义标签，用逗号或空格隔开">
@@ -217,6 +218,6 @@
 
   <script src="js/main.js?v=20261101f"></script>
   <script src="js/vendor/supabase.js"></script>
-  <script type="module" src="js/submit.js?v=20261101f"></script>
+  <script type="module" src="js/submit.js?v=20261101i"></script>
 </body>
 </html>
