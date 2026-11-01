@@ -113,3 +113,4 @@
   .big-stat .label { font-size: 0.78rem; }
   .honor-block { padding: 18px 16px 14px; }
 }
+.g-goto { display: inline-block; margin-top: 10px; font-size: 0.82rem; color: var(--sun); text-decoration: none; border-bottom: 1px solid currentColor; }

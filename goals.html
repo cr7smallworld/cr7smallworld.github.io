@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>进球档案 · CR7的小世界</title>
+  <meta name="description" content="C罗职业生涯每一个进球：哪场比赛、怎么进的、比分、助攻">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20261101f">
+  <link rel="stylesheet" href="css/board.css?v=20261101f">
+  <link rel="stylesheet" href="css/goals.css?v=20261101m">
+  <link rel="stylesheet" href="css/polish.css?v=20261101m">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="honors.html">荣誉与数据</a></li>
+        <li><a href="goals.html">进球档案</a></li>
+        <li><a href="fun.html">有趣事件</a></li>
+        <li><a href="relations.html">人物关系</a></li>
+        <li><a href="archive.html">珍贵资料库</a></li>
+        <li><a href="fanworks.html">精彩二创</a></li>
+        <li><a href="spicy.html">🦌管素材</a></li>
+        <li><a href="community.html">社区共建</a></li>
+        <li><a href="user.html">个人中心</a></li>
+        <li><a href="support.html">赞赏支持</a></li>
+      </ul>
+    </div>
+  </nav>
+
+    <header class="board-header">
+    <div class="board-header-inner">
+      <span class="kicker">No.02</span>
+      <h1>进球档案</h1>
+      <p>从2002年10月7日第一个球开始，每一个都在这里</p>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <label class="search-box"><input type="search" id="gSearch" placeholder="搜对手、助攻、赛事、球号，比如 巴萨、本泽马、500" aria-label="搜索"></label>
+      <select id="gTeam" aria-label="按球队筛选"><option value="">全部球队</option></select>
+      <select id="gComp" aria-label="按赛事筛选"><option value="">全部赛事</option></select>
+      <select id="gYear" aria-label="按年份筛选"><option value="">全部年份</option></select>
+      <select id="gType" aria-label="按方式筛选">
+        <option value="">全部方式</option>
+        <option value="right">右脚</option><option value="left">左脚</option><option value="head">头球</option><option value="other">其他部位</option>
+        <option value="penalty">点球</option><option value="free-kick">任意球</option><option value="outside-open-play">禁区外远射</option>
+        <option value="gwg">制胜球</option><option value="video">有视频</option>
+      </select>
+      <button type="button" class="sort-btn" id="gSort">最新在前 ↓</button>
+      <button type="button" class="clear-btn" id="gClear" hidden>清空筛选</button>
+    </div>
+  </div>
+
+  <main class="board-main goals-main">
+    <section class="g-summary" id="gSummary"></section>
+    <p class="g-count" id="gCount"></p>
+    <ol class="g-list" id="gList"></ol>
+    <button type="button" class="g-more" id="gMore" hidden>再看 50 个</button>
+    <p class="g-source">数据参考 <a href="https://www.messivsronaldo.app/ronaldo-all-goals/" target="_blank" rel="noopener">messivsronaldo.app</a>，按职业生涯985球的口径统计，更新到 <span id="gUpdated"></span>。中文队名和人名是站里翻的，英文原名写在括号里。发现哪个球记错了，可以去<a href="feedback.html">给站长留言</a>。</p>
+  </main>
+
+<footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="career.html">生涯档案</a><a href="honors.html">荣誉与数据</a><a href="goals.html">进球档案</a><a href="fun.html">有趣事件</a><a href="relations.html">人物关系</a><a href="archive.html">珍贵资料库</a><a href="fanworks.html">精彩二创</a><a href="spicy.html">🦌管素材</a><a href="community.html">社区共建</a><a href="user.html">个人中心</a><a href="support.html">赞赏支持</a><a href="about.html">关于</a>
+      </nav>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js?v=20261101f"></script>
+  <script src="data/goals-data.js?v=20261101m"></script>
+  <script src="js/goals.js?v=20261101m"></script>
+</body>
+</html>
