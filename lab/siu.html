@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIUUU</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 30px;
+  background: #F6F8FA; font-family: 'Noto Sans SC', system-ui, sans-serif;
+}
+.siu-loader {
+  display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 0;
+}
+.siu-figure {
+  width: 60px; height: 80px; position: relative;
+  animation: siu-jump 1.4s ease-in-out infinite;
+}
+.siu-figure::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 16px; height: 16px; background: #1E2A38; border-radius: 50%;
+}
+.siu-figure::after {
+  content: ''; position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 24px; background: #1E2A38; border-radius: 2px;
+}
+.siu-arm-l, .siu-arm-r {
+  position: absolute; top: 18px; width: 3px; height: 22px;
+  background: #1E2A38; border-radius: 2px;
+  transform-origin: top center;
+}
+.siu-arm-l { left: 16px; animation: siu-arm-l 1.4s ease-in-out infinite; }
+.siu-arm-r { right: 16px; animation: siu-arm-r 1.4s ease-in-out infinite; }
+.siu-leg-l, .siu-leg-r {
+  position: absolute; top: 40px; width: 3px; height: 24px;
+  background: #1E2A38; border-radius: 2px;
+  transform-origin: top center;
+}
+.siu-leg-l { left: 24px; animation: siu-leg-l 1.4s ease-in-out infinite; }
+.siu-leg-r { right: 24px; animation: siu-leg-r 1.4s ease-in-out infinite; }
+.siu-shadow {
+  width: 40px; height: 6px; background: rgba(30,42,56,0.12);
+  border-radius: 50%; animation: siu-shadow 1.4s ease-in-out infinite;
+}
+.siu-text {
+  font-size: 0.92rem; color: #7b8794; letter-spacing: 0.06em;
+}
+.title {
+  font-size: 1.1rem; color: #1E2A38; font-weight: 500; letter-spacing: 0.05em;
+}
+
+@keyframes siu-jump {
+  0%, 100% { transform: translateY(0); }
+  15% { transform: translateY(2px); }
+  40% { transform: translateY(-28px); }
+  70% { transform: translateY(-28px); }
+  85% { transform: translateY(0); }
+}
+@keyframes siu-arm-l {
+  0%, 15% { transform: rotate(20deg); }
+  35%, 75% { transform: rotate(-140deg); }
+  90%, 100% { transform: rotate(20deg); }
+}
+@keyframes siu-arm-r {
+  0%, 15% { transform: rotate(-20deg); }
+  35%, 75% { transform: rotate(140deg); }
+  90%, 100% { transform: rotate(-20deg); }
+}
+@keyframes siu-leg-l {
+  0%, 15% { transform: rotate(8deg); }
+  35%, 75% { transform: rotate(-12deg); }
+  90%, 100% { transform: rotate(8deg); }
+}
+@keyframes siu-leg-r {
+  0%, 15% { transform: rotate(-8deg); }
+  35%, 75% { transform: rotate(12deg); }
+  90%, 100% { transform: rotate(-8deg); }
+}
+@keyframes siu-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.7; }
+  40%, 70% { transform: scaleX(0.5); opacity: 0.3; }
+}
+</style>
+</head>
+<body>
+  <p class="title">CR7的小世界 · 加载动画预览</p>
+  <div class="siu-loader">
+    <div class="siu-figure">
+      <span class="siu-arm-l"></span>
+      <span class="siu-arm-r"></span>
+      <span class="siu-leg-l"></span>
+      <span class="siu-leg-r"></span>
+    </div>
+    <div class="siu-shadow"></div>
+    <p class="siu-text">SIUUU 正在加载</p>
+  </div>
+  <p style="font-size:0.78rem;color:#aaa;">这个页面只是给站长看完整动画用的，不会挂到导航上</p>
+</body>
+</html>
