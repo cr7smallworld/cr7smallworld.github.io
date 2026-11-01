@@ -371,3 +371,82 @@ body.no-scroll { overflow: hidden; }
   border-radius: 999px;
   margin-bottom: 6px !important;
 }
+
+/* ===== SIU 加载动画 ===== */
+.siu-loader {
+  display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 0;
+}
+.siu-figure {
+  width: 60px; height: 80px; position: relative;
+  animation: siu-jump 1.4s ease-in-out infinite;
+}
+/* 头 */
+.siu-figure::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 16px; height: 16px; background: var(--dark, #1E2A38); border-radius: 50%;
+}
+/* 身体 */
+.siu-figure::after {
+  content: ''; position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 24px; background: var(--dark, #1E2A38); border-radius: 2px;
+}
+/* 左手（SIU张开往上举） */
+.siu-arm-l, .siu-arm-r {
+  position: absolute; top: 18px; width: 3px; height: 22px;
+  background: var(--dark, #1E2A38); border-radius: 2px;
+  transform-origin: top center;
+}
+.siu-arm-l { left: 16px; animation: siu-arm-l 1.4s ease-in-out infinite; }
+.siu-arm-r { right: 16px; animation: siu-arm-r 1.4s ease-in-out infinite; }
+/* 左腿 右腿 */
+.siu-leg-l, .siu-leg-r {
+  position: absolute; top: 40px; width: 3px; height: 24px;
+  background: var(--dark, #1E2A38); border-radius: 2px;
+  transform-origin: top center;
+}
+.siu-leg-l { left: 24px; animation: siu-leg-l 1.4s ease-in-out infinite; }
+.siu-leg-r { right: 24px; animation: siu-leg-r 1.4s ease-in-out infinite; }
+/* 影子 */
+.siu-shadow {
+  width: 40px; height: 6px; background: rgba(30,42,56,0.12);
+  border-radius: 50%; animation: siu-shadow 1.4s ease-in-out infinite;
+}
+.siu-text {
+  font-size: 0.82rem; color: var(--text-light, #7b8794); letter-spacing: 0.06em;
+}
+
+/* 起跳 → 空中张开 → 落地 */
+@keyframes siu-jump {
+  0%, 100% { transform: translateY(0); }
+  15% { transform: translateY(2px); } /* 蹲一下蓄力 */
+  40% { transform: translateY(-28px); } /* 跳到最高 */
+  70% { transform: translateY(-28px); } /* 空中停一下 */
+  85% { transform: translateY(0); }
+}
+/* 双臂：落地收回 → 起跳张开 */
+@keyframes siu-arm-l {
+  0%, 15% { transform: rotate(20deg); }
+  35%, 75% { transform: rotate(-140deg); } /* 向上张开 */
+  90%, 100% { transform: rotate(20deg); }
+}
+@keyframes siu-arm-r {
+  0%, 15% { transform: rotate(-20deg); }
+  35%, 75% { transform: rotate(140deg); }
+  90%, 100% { transform: rotate(-20deg); }
+}
+/* 腿：起跳并拢 → 空中微分开 */
+@keyframes siu-leg-l {
+  0%, 15% { transform: rotate(8deg); }
+  35%, 75% { transform: rotate(-12deg); }
+  90%, 100% { transform: rotate(8deg); }
+}
+@keyframes siu-leg-r {
+  0%, 15% { transform: rotate(-8deg); }
+  35%, 75% { transform: rotate(12deg); }
+  90%, 100% { transform: rotate(-8deg); }
+}
+/* 影子：跳起来变小，落地变大 */
+@keyframes siu-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.7; }
+  40%, 70% { transform: scaleX(0.5); opacity: 0.3; }
+}
