@@ -78,3 +78,36 @@ function birthday() {
   }
 }
 birthday();
+
+// 首页进球档案预览：最近3个进球
+(function goalsPreview() {
+  const box = document.getElementById('preview-goals');
+  if (!box || !window.CR7_GOALS) return;
+  const ZH = window.CR7_ZH || { team: {}, comp: {} };
+  const SHORT = { 'Real Madrid': '皇马', Portugal: '葡萄牙', 'Manchester United': '曼联', 'Al Nassr': '利雅得胜利', Juventus: '尤文', 'Sporting CP': '葡萄牙体育' };
+  const TYPE = { right: '右脚', left: '左脚', head: '头球', other: '其他' };
+  const G = window.CR7_GOALS;
+  const latest = G.slice(-3).reverse();
+  latest.forEach(function(r) {
+    var n=r[0], date=r[1], team=r[2], opp=r[3], gf=r[4], ga=r[5], comp=r[6], min=r[9], type=r[10];
+    var a = document.createElement('a');
+    a.className = 'hp-card';
+    a.href = 'goals.html?n=' + n;
+    var noimg = document.createElement('div');
+    noimg.className = 'hp-noimg';
+    noimg.textContent = n;
+    a.appendChild(noimg);
+    var b = document.createElement('div');
+    b.className = 'hp-body';
+    var p1 = document.createElement('p');
+    p1.className = 'hp-date';
+    p1.textContent = (ZH.comp[comp] || comp) + ' · ' + (TYPE[type] || '') + ' · ' + date.replace(/-/g, '.');
+    var p2 = document.createElement('p');
+    p2.className = 'hp-title';
+    p2.textContent = (SHORT[team] || team) + ' ' + gf + '-' + ga + ' ' + (ZH.team[opp] || opp);
+    b.appendChild(p1);
+    b.appendChild(p2);
+    a.appendChild(b);
+    box.appendChild(a);
+  });
+})();
