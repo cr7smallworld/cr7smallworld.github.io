@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赞赏支持 · CR7的小世界</title>
+  <meta name="description" content="如果你觉得这个网站还不错，可以请站长喝杯水">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20261101f">
+  <link rel="stylesheet" href="css/pages.css?v=20261101f">
+  <link rel="stylesheet" href="css/polish.css?v=20261101f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
+<style>
+.support-card {
+  max-width: 480px; margin: 0 auto; padding: 32px 24px;
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(30,42,56,0.08);
+  text-align: center;
+}
+.support-card h2 {
+  font-family: 'Noto Serif SC', serif; font-size: 1.3rem;
+  color: var(--dark, #1E2A38); margin-bottom: 8px;
+}
+.support-card .subtitle {
+  font-size: 0.88rem; color: var(--text-light, #7b8794);
+  margin-bottom: 24px; line-height: 1.7;
+}
+.qr-wrap {
+  display: inline-block; padding: 12px; background: #FAFAFA;
+  border-radius: 12px; border: 1px solid #EEF2F5;
+}
+.qr-wrap img {
+  display: block; width: 220px; height: 220px;
+  object-fit: contain; border-radius: 6px;
+}
+.qr-empty {
+  width: 220px; height: 160px; display: flex;
+  align-items: center; justify-content: center;
+  color: var(--text-light); font-size: 0.86rem;
+  background: #F6F8FA; border-radius: 8px;
+  border: 2px dashed #DCE3E8;
+}
+.support-notes {
+  max-width: 480px; margin: 28px auto 0; padding: 0 4px;
+  text-align: left;
+}
+.support-notes li {
+  font-size: 0.82rem; line-height: 1.8;
+  color: var(--text-light, #7b8794);
+  list-style: none; padding-left: 1.2em; position: relative;
+}
+.support-notes li::before {
+  content: '·'; position: absolute; left: 0; color: var(--sun, #D4A847);
+  font-weight: 700; font-size: 1.1em;
+}
+.support-notes li + li { margin-top: 4px; }
+.support-msg {
+  max-width: 480px; margin: 24px auto 0;
+  font-size: 0.84rem; color: var(--text-light); text-align: center;
+  line-height: 1.7;
+}
+
+/* 站长上传区 — 只有登录了站长账号才显示 */
+.admin-upload { display: none; margin: 28px auto 0; max-width: 480px; text-align: center; }
+.admin-upload.show { display: block; }
+.admin-upload label {
+  display: inline-block; padding: 10px 20px;
+  font-size: 0.86rem; color: var(--dark);
+  background: #fff; border: 1px dashed var(--sun);
+  border-radius: 8px; cursor: pointer;
+}
+.admin-upload label:hover { background: #FDF8EC; }
+.admin-upload input { display: none; }
+.admin-upload .upload-msg {
+  margin-top: 10px; font-size: 0.82rem; color: var(--text-light);
+}
+</style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="honors.html">荣誉与数据</a></li>
+        <li><a href="fun.html">有趣事件</a></li>
+        <li><a href="relations.html">人物关系</a></li>
+        <li><a href="archive.html">珍贵资料库</a></li>
+        <li><a href="fanworks.html">精彩二创</a></li>
+        <li><a href="spicy.html">🦌管素材</a></li>
+        <li><a href="community.html">社区共建</a></li>
+        <li><a href="user.html">个人中心</a></li>
+        <li><a href="support.html" class="active">赞赏支持</a></li>
+        <li><a href="support.html">赞赏支持</a><a href="about.html">关于</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="board-header">
+    <div class="board-header-inner">
+      <h1>赞赏支持</h1>
+      <p>如果你觉得这个网站还不错，可以请站长喝杯水 🥤</p>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <div class="support-card">
+      <h2>微信赞赏码</h2>
+      <p class="subtitle">长按或截图扫码即可赞赏</p>
+      <div class="qr-wrap" id="qrWrap">
+        <div class="qr-empty" id="qrEmpty">站长还没上传赞赏码</div>
+      </div>
+    </div>
+
+    <ul class="support-notes">
+      <li>赞赏完全自愿，不赞赏也能正常使用网站的所有功能</li>
+      <li>赞赏所得将用于网站服务器维护费、API调用费（Token费）等运营开支</li>
+      <li>本站为球迷自发搭建的非商业网站，不以盈利为目的</li>
+      <li>金额随意，一杯水的钱对站长来说就是很大的鼓励了</li>
+      <li>赞赏后无需留言告知，站长心里默默感谢每一位</li>
+    </ul>
+
+    <p class="support-msg">
+      谢谢每一个愿意为这份热爱买单的人 ❤️<br>
+      —— CR7的小世界 站长
+    </p>
+
+    <!-- 站长专用上传区：只有站长登录后才能看到这块 -->
+    <div class="admin-upload" id="adminUpload">
+      <label for="qrFile">更换赞赏码图片</label>
+      <input type="file" id="qrFile" accept="image/*">
+      <p class="upload-msg" id="uploadMsg"></p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="career.html">生涯档案</a><a href="honors.html">荣誉与数据</a><a href="fun.html">有趣事件</a><a href="relations.html">人物关系</a><a href="archive.html">珍贵资料库</a><a href="fanworks.html">精彩二创</a><a href="spicy.html">🦌管素材</a><a href="community.html">社区共建</a><a href="user.html">个人中心</a><a href="support.html">赞赏支持</a><a href="about.html">关于</a>
+      </nav>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
+  </footer>
+
+  <script src="js/vendor/supabase.js"></script>
+  <script src="js/main.js?v=20261101f"></script>
+  <script>
+  (async function() {
+    const SUPABASE_URL = 'https://ldxcrwilgvmswmbplcap.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_i0TGeGqYBCvBTcWotN3C7A_N7Kxtl87';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const BUCKET = 'submissions';
+    const QR_PATH = 'site/reward-qr.png';
+
+    // 显示已有的赞赏码
+    const { data } = sb.storage.from(BUCKET).getPublicUrl(QR_PATH);
+    if (data && data.publicUrl) {
+      const img = new Image();
+      img.src = data.publicUrl + '?t=' + Date.now();
+      img.alt = '微信赞赏码';
+      img.onload = () => {
+        const wrap = document.getElementById('qrWrap');
+        wrap.innerHTML = '';
+        wrap.appendChild(img);
+      };
+      // onerror就保留"站长还没上传"的提示
+    }
+
+    // 检查是不是站长
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: admin } = await sb.rpc('is_admin');
+    if (!admin) return;
+
+    // 站长才能看到上传区
+    document.getElementById('adminUpload').classList.add('show');
+    const msg = document.getElementById('uploadMsg');
+
+    document.getElementById('qrFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { msg.textContent = '只能传图片'; return; }
+      if (file.size > 2 * 1024 * 1024) { msg.textContent = '图片太大了，2MB以内'; return; }
+
+      msg.textContent = '正在上传…';
+      const { error } = await sb.storage.from(BUCKET).upload(QR_PATH, file, {
+        cacheControl: '60',
+        upsert: true   // 覆盖旧的
+      });
+      if (error) { msg.textContent = '上传失败：' + error.message; return; }
+
+      msg.textContent = '上传成功！刷新页面就能看到了';
+      // 立刻显示
+      const { data: d2 } = sb.storage.from(BUCKET).getPublicUrl(QR_PATH);
+      const wrap = document.getElementById('qrWrap');
+      wrap.innerHTML = '';
+      const img = new Image();
+      img.src = d2.publicUrl + '?t=' + Date.now();
+      img.alt = '微信赞赏码';
+      wrap.appendChild(img);
+    });
+  })();
+  </script>
+</body>
+</html>
