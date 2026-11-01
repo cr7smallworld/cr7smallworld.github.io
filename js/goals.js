@@ -79,7 +79,8 @@
     if (state.q) {
       const q = state.q.toLowerCase();
       if (/^\d+$/.test(q)) return String(g.n) === q || g.date.startsWith(q);
-      const hay = [g.opp, ZH.team[g.opp], g.team, ZH.team[g.team], g.comp, ZH.comp[g.comp], g.assist, ZH.person[g.assist], g.date].join(' ').toLowerCase();
+      const AL = window.CR7_ALIAS || {};
+      const hay = [g.opp, ZH.team[g.opp], AL[g.opp], g.team, ZH.team[g.team], AL[g.team], g.comp, ZH.comp[g.comp], g.assist, ZH.person[g.assist], g.date].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
