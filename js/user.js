@@ -254,7 +254,7 @@
     if (name === 'notif') loadPane('notif');
     if (name === 'favs') loadFavs();
     const q = new URLSearchParams(location.search);
-    if (name === 'items') q.delete('tab'); else q.set('tab', name);
+    if (name === 'items' || name === 'mine') q.delete('tab'); else q.set('tab', name);
     history.replaceState(null, '', '?' + q.toString());
   }
 
@@ -284,11 +284,13 @@
     if (mine) {
       $('uSetting').hidden = false;
       ['mine', 'notice', 'notif', 'favs'].forEach((k) => { document.querySelector(`[data-tab="${k}"]`).hidden = false; });
+      // 自己的主页：「投稿」和「我的投稿」重复了，只留「我的投稿」
+      document.querySelector('[data-tab="items"]').hidden = true;
       refreshDots();
     }
     document.querySelectorAll('.u-tab').forEach((b) => b.addEventListener('click', () => tab(b.dataset.tab)));
     const want = new URLSearchParams(location.search).get('tab');
-    if (mine && ['mine', 'notice', 'notif', 'favs'].includes(want)) tab(want);
+    if (mine) tab(['mine', 'notice', 'notif', 'favs'].includes(want) ? want : 'mine');
   }
   start();
 })();
