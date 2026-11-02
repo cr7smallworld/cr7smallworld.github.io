@@ -38,6 +38,18 @@ function el(tag, cls, text) {
 const imgUrl = (p) => supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl;
 const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 const yearOf = (s) => { const m = (s || '').match(/(19|20)\d{2}/); return m ? Number(m[0]) : null; };
+function makeCollapsible(h, contents) {
+  h.classList.add('pp-toggle');
+  const arrow = el('span', 'pp-toggle-arrow', '▶');
+  h.insertBefore(arrow, h.firstChild);
+  contents.forEach(c => c.hidden = true);
+  h.addEventListener('click', () => {
+    const willShow = contents[0].hidden;
+    contents.forEach(c => c.hidden = !willShow);
+    arrow.textContent = willShow ? '▼' : '▶';
+  });
+}
+
 const aliases = (p) => (p.person_alias || '').split(/[,，、/／\s]+/).map((x) => x.trim()).filter(Boolean);
 const clubsOf = (p) => {
   const c = (p.tags || []).filter((t) => GROUP_KEYS.includes(t));
@@ -242,11 +254,13 @@ function fillPanel(panel, p) {
 
   const ms = state.moments[p.id] || [];
   const tl = el('div', 'pp-moments');
-  tl.append(el('h3', 'pp-h', ms.length ? '糖点 & 经历' : '还没有人投稿他们之间的经历'));
+  const tlH = el('h3', 'pp-h', ms.length ? '糖点 & 经历' : '还没有人投稿他们之间的经历');
+  tl.append(tlH);
   if (ms.length) {
     const ol = el('ol', 'mm-list');
     ms.forEach((m) => ol.append(moment(m)));
     tl.append(ol);
+    makeCollapsible(tlH, [ol]);
   }
   panel.append(tl);
 
@@ -291,7 +305,8 @@ function gallery(p) {
   const box = el('div', 'pp-gallery');
   const pics = [];
   list.forEach((m) => (m.image_paths || []).forEach((path) => pics.push({ url: imgUrl(path), m })));
-  box.append(el('h3', 'pp-h', pics.length ? `与C罗的合照 · ${pics.length}张` : '与C罗的合照'));
+  const h = el('h3', 'pp-h', pics.length ? `与C罗的合照 · ${pics.length}张` : '与C罗的合照');
+  box.append(h);
   if (!pics.length) {
     const tip = el('p', 'pg-empty');
     tip.append('还没有人上传他和C罗的合照，');
@@ -333,6 +348,7 @@ function gallery(p) {
     notes.append(li);
   });
   box.append(notes);
+  makeCollapsible(h, [grid, notes]);
   return box;
 }
 
