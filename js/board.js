@@ -16,6 +16,8 @@ const SPICY = SECTION === 'spicy';
 // 精彩二创：没有事件时间，年份筛选换成按作品分类筛选
 const FW = SECTION === 'fanworks';
 const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '表情包', '其它'];
+const TREATS = SECTION === 'treats';
+const TREATS_TYPES = ['文字代餐', '图片代餐'];
 const $ = (id) => document.getElementById(id);
 
 const state = { all: [], q: '', club: '', year: '', tag: '', sort: 'desc' };
@@ -41,12 +43,19 @@ const safeUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : '');
 const NO_CAPTION = '🦌';
 const caption = (it) => (SPICY && it.summary === NO_CAPTION ? '' : it.summary);
 
-const SECTION_TITLE = { fun: '有趣事件', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
+const SECTION_TITLE = { fun: '有趣事件', archive: '珍贵资料库', fanworks: '精彩二创', treats: '代餐一下', spicy: '🦌管素材' };
 const who = (it) => window.cr7Who(it.public_member, it.uploader || '匿名');
 
 function fwLine(it) {
   const p = el('p', 'card-date fw-type');
   p.textContent = it.fanwork_type || '二创';
+  return p;
+}
+
+function treatsLine(it) {
+  const p = el('p', 'card-date fw-type');
+  const t = (it.tags || [])[0];
+  p.textContent = t || '代餐';
   return p;
 }
 
@@ -85,6 +94,10 @@ function buildFilters() {
   const yearSel = $('fYear');
   if (SPICY) {
     // 🦌管素材不分类
+  } else if (TREATS) {
+    yearSel.setAttribute('aria-label', '按类型筛选');
+    yearSel.options[0].textContent = '全部类型';
+    TREATS_TYPES.forEach((t) => yearSel.append(new Option(t, t)));
   } else if (FW) {
     yearSel.setAttribute('aria-label', '按作品分类筛选');
     yearSel.options[0].textContent = '全部分类';
@@ -118,7 +131,7 @@ function syncTagButtons() {
 
 function matches(it) {
   if (state.club && !(it.tags || []).includes(state.club)) return false;
-  if (state.year && (FW ? it.fanwork_type !== state.year : yearOf(it) !== state.year)) return false;
+  if (state.year && (FW ? it.fanwork_type !== state.year : TREATS ? !(it.tags || []).includes(state.year) : yearOf(it) !== state.year)) return false;
   if (state.tag && !(it.tags || []).includes(state.tag)) return false;
   if (state.q) {
     const hay = [it.summary, it.detail, it.source, it.event_date, it.uploader, it.fanwork_type, it.fanwork_platform, it.fanwork_author, ...(it.tags || [])].join(' ').toLowerCase();
@@ -129,7 +142,7 @@ function matches(it) {
 
 function sortKey(it) {
   // 有事件年份的按年份排，没有的按投稿时间
-  if (FW || SPICY) return new Date(it.created_at).getTime();
+  if (FW || SPICY || TREATS) return new Date(it.created_at).getTime();
   return yearOf(it) ? Number(yearOf(it)) * 1e13 : new Date(it.created_at).getTime() / 1000;
 }
 
@@ -168,7 +181,7 @@ function card(it) {
     c.append(el('div', 'card-video', linkText(it.video_url, true)));
   }
   const body = el('div', 'card-body');
-  if (!SPICY) body.append(FW ? fwLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
+  if (!SPICY) body.append(FW ? fwLine(it) : TREATS ? treatsLine(it) : el('p', 'card-date', it.event_date || '时间未知'));
   if (caption(it)) body.append(el('h3', 'card-title', caption(it)));
   if (it.detail) body.append(el('p', 'card-excerpt', it.detail));
   const tags = el('div', 'card-tags');
@@ -189,7 +202,7 @@ function card(it) {
 function openDetail(it) {
   const box = $('modalBody');
   box.innerHTML = '';
-  if (!SPICY) box.append(FW ? fwLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
+  if (!SPICY) box.append(FW ? fwLine(it) : TREATS ? treatsLine(it) : el('p', 'm-date', it.event_date || '时间未知'));
   if (caption(it)) box.append(el('h2', 'm-title', caption(it)));
 
   if (it.image_paths && it.image_paths.length) {
@@ -227,7 +240,7 @@ function openDetail(it) {
   const meta = el('dl', 'm-meta');
   const rows = FW
     ? [['原作者', it.fanwork_author || '未知'], ['来源平台', it.fanwork_platform || '未知'], ['投稿', it.uploader || '匿名']]
-    : SPICY ? [['投稿', it.uploader || '匿名']]
+    : SPICY || TREATS ? [['投稿', it.uploader || '匿名']]
     : [['出处', it.source || '未知'], ['投稿', it.uploader || '匿名']];
   rows.forEach(([k, val]) => {
     const dd = el('dd');
@@ -257,7 +270,7 @@ function openDetail(it) {
   const pic = el('button', 'share-btn', '生成分享图');
   pic.type = 'button';
   pic.addEventListener('click', () => showShare({
-    kicker: SPICY ? '🦌管素材' : `${SECTION_TITLE[SECTION] || ''}${!FW && it.event_date ? ' · ' + it.event_date : ''}${FW && it.fanwork_type ? ' · ' + it.fanwork_type : ''}`,
+    kicker: SPICY ? '🦌管素材' : TREATS ? '代餐一下' : `${SECTION_TITLE[SECTION] || ''}${!FW && it.event_date ? ' · ' + it.event_date : ''}${FW && it.fanwork_type ? ' · ' + it.fanwork_type : ''}`,
     title: caption(it) || '🦌管素材',
     detail: it.detail,
     image: it.image_paths && it.image_paths.length ? imgUrl(it.image_paths[0]) : '',

@@ -3,7 +3,7 @@
   const A = window.cr7Account;
   const $ = (id) => document.getElementById(id);
   const IMG = 'https://ldxcrwilgvmswmbplcap.supabase.co/storage/v1/object/public/submissions/';
-  const SEC = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
+  const SEC = { fun: '有趣事件', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', treats: '代餐一下', spicy: '🦌管素材' };
   const KIND = { supplement: '补充', correction: '纠错', person: '新人物', upload: '投稿' };
   const u = (new URLSearchParams(location.search).get('u') || '').trim();
 
@@ -30,7 +30,7 @@
     if (it.section === 'relations') return it.kind === 'person' ? `relations.html?p=${it.id}` : `relations.html?id=${it.id}`;
     return `${it.section}.html?id=${it.id}`;
   }
-  const title = (it) => (it.section === 'spicy' && it.summary === '🦌' ? '🦌管素材' : it.summary);
+  const title = (it) => (it.section === 'spicy' && it.summary === '🦌' ? '🦌管素材' : it.section === 'treats' && it.summary === '代餐' ? '代餐一下' : it.summary);
 
   function itemCard(it) {
     const a = el('a', 'u-item');

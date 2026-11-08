@@ -450,3 +450,7 @@ body.no-scroll { overflow: hidden; }
   0%, 100% { transform: scaleX(1); opacity: 0.7; }
   40%, 70% { transform: scaleX(0.5); opacity: 0.3; }
 }
+
+/* 板块副标题和警告 */
+.board-subtitle { font-size: 0.92rem; color: #666; margin: 6px 0 0; line-height: 1.6; }
+.board-warn { font-size: 0.85rem; color: #b45309; margin: 10px 0 0; line-height: 1.6; }

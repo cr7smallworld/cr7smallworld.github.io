@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>代餐一下 · CR7的小世界</title>
+  <meta name="description" content="那些像在写他的歌词、文字、图片……代餐收藏站">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20261108a">
+  <link rel="stylesheet" href="css/board.css?v=20261108a">
+  <link rel="stylesheet" href="css/polish.css?v=20261108a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23D4A847%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-family=%27Georgia,serif%27 font-size=%2738%27 font-weight=%27700%27 fill=%27white%27 text-anchor=%27middle%27%3E7%3C/text%3E%3C/svg%3E">
+</head>
+<body data-section="treats">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">CR7的小世界</a>
+      <button class="nav-toggle" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="career.html">生涯档案</a></li>
+        <li><a href="honors.html">荣誉与数据</a></li>
+        <li><a href="goals.html">进球档案</a></li>
+        <li><a href="fun.html">有趣事件</a></li>
+        <li><a href="relations.html">人物关系</a></li>
+        <li><a href="archive.html">珍贵资料库</a></li>
+        <li><a href="fanworks.html">精彩二创</a></li>
+        <li><a href="treats.html" class="active">代餐一下</a></li>
+        <li><a href="spicy.html">🦌管素材</a></li>
+        <li><a href="community.html">社区共建</a></li>
+        <li><a href="user.html">个人中心</a></li>
+        <li><a href="support.html">赞赏支持</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="board-header">
+    <div class="board-header-inner">
+      <span class="kicker">No.08</span>
+      <h1>代餐一下</h1>
+      <p class="board-subtitle">那些像在写他的歌词、文字、图片……总有些东西让你觉得「这说的不就是他吗」</p>
+      <p class="board-warn">⚠️ 原博主禁止代餐的不要投，有属性的不要投</p>
+      <a class="board-cta" data-submit-link href="submit.html">＋ 我要投稿</a>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <label class="search-box"><input type="search" id="fSearch" placeholder="搜内容或投稿人" aria-label="搜索"></label>
+      <select id="fClub" hidden><option value=""></option></select>
+      <select id="fYear" aria-label="按类型筛选"><option value="">全部类型</option></select>
+      <button type="button" class="sort-btn" id="fSort">最新在前 ↓</button>
+      <button type="button" class="clear-btn" id="clearBtn" hidden>清空筛选</button>
+    </div>
+    <div class="tag-row" id="tagRow" hidden></div>
+  </div>
+
+  <main class="board-main">
+    <p class="result-count" id="resultCount"></p>
+    <div class="siu-loader" id="loading"><div class="siu-figure"><span class="siu-arm-l"></span><span class="siu-arm-r"></span><span class="siu-leg-l"></span><span class="siu-leg-r"></span></div><div class="siu-shadow"></div><p class="siu-text">SIUUU 正在加载</p></div>
+    <div class="board-state" id="loadError" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>加载失败了</h2><p>网络不太好，刷新一下试试</p>
+    </div>
+    <div class="board-state" id="empty" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>这里还空着</h2>
+      <a class="board-cta" data-submit-link href="submit.html">＋ 做第一个投稿的人</a>
+    </div>
+    <div class="board-state" id="noMatch" hidden>
+      <span class="state-mark" aria-hidden="true"></span><h2>没找到符合条件的</h2><p>换个关键词或者清空筛选看看</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button type="button" class="modal-close" id="modalClose" aria-label="关闭">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo">CR7的小世界</p>
+      <p class="footer-text">从马德拉岛到全世界，记录每一个值得被记住的瞬间</p>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="career.html">生涯档案</a><a href="honors.html">荣誉与数据</a><a href="goals.html">进球档案</a><a href="fun.html">有趣事件</a><a href="relations.html">人物关系</a><a href="archive.html">珍贵资料库</a><a href="fanworks.html">精彩二创</a><a href="treats.html">代餐一下</a><a href="spicy.html">🦌管素材</a><a href="community.html">社区共建</a><a href="user.html">个人中心</a><a href="support.html">赞赏支持</a><a href="about.html">关于</a>
+      </nav>
+      <p class="footer-copy">Made with ❤️ by iluo</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js?v=20261108a"></script>
+  <script src="js/vendor/supabase.js"></script>
+  <script type="module" src="js/board.js?v=20261108a"></script>
+</body>
+</html>

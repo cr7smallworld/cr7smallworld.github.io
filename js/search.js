@@ -5,7 +5,7 @@
   const IMG = 'https://ldxcrwilgvmswmbplcap.supabase.co/storage/v1/object/public/submissions/';
   const SECS = [
     ['career', '生涯档案'], ['fun', '有趣事件'], ['relations', '人物关系'],
-    ['archive', '珍贵资料库'], ['fanworks', '精彩二创'], ['spicy', '🦌管素材'],
+    ['archive', '珍贵资料库'], ['fanworks', '精彩二创'], ['treats', '代餐一下'], ['spicy', '🦌管素材'],
   ];
   const SEC = Object.fromEntries(SECS);
   let all = null;
@@ -53,9 +53,10 @@
       const who = r.person_id && people[r.person_id];
       const isPerson = r.kind === 'person';
       const spicyBlank = r.section === 'spicy' && r.summary === '🦌';
+      const treatsBlank = r.section === 'treats' && r.summary === '代餐';
       return {
         sec: r.section,
-        title: isPerson ? r.summary : spicyBlank ? '🦌管素材' : r.summary,
+        title: isPerson ? r.summary : spicyBlank ? '🦌管素材' : treatsBlank ? '代餐一下' : r.summary,
         date: isPerson ? (r.person_role || '人物') : (r.event_date || r.fanwork_type || ''),
         text: r.detail || '',
         extra: [

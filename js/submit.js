@@ -48,7 +48,7 @@ const FW_TYPES = ['混剪', '同人文', '同人图', '修图', '表情包', '�
 const CLUB_TAGS = ['里斯本竞技', '抬一', '皇马', '尤文', '抬二', '沙特', '葡萄牙', '对手', '亲人', '其它'];
 const CLUB_LABELS = { '里斯本竞技': '里斯本竞技', '抬一': '曼联·抬一', '皇马': '皇马', '尤文': '尤文', '抬二': '曼联·抬二', '沙特': '利雅得胜利', '葡萄牙': '葡萄牙国家队', '对手': '对手', '亲人': '亲人', '其它': '其它' };
 
-const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', spicy: '🦌管素材' };
+const SECTION_NAMES = { fun: '有趣事件 & 性格萌点', relations: '人物关系', archive: '珍贵资料库', fanworks: '精彩二创', treats: '代餐一下', spicy: '🦌管素材' };
 
 // ---------- 投稿类型 ----------
 function setKind(k) {
@@ -233,17 +233,24 @@ function updateFw() {
   });
   const arc = $('section').value === 'archive';
   const spicy = $('section').value === 'spicy';
+  const treats = $('section').value === 'treats';
   $('videoLabel').innerHTML = (fw ? '视频/帖子链接' : arc ? '视频/资料链接' : '视频链接') + ' <span class="opt">选填</span>';
   $('videoUrl').placeholder = fw ? '原作品的视频或帖子地址' : arc ? '视频地址，或者网盘分享链接（书、杂志、PDF放网盘）' : 'B站、微博、YouTube 等视频地址';
   // 🦌管素材：只留图片、配字、上传人
   document.querySelectorAll('.not-spicy').forEach((n) => {
-    if (spicy) n.hidden = true;
+    if (spicy || treats) n.hidden = true;
     else if (n.classList.contains('plain')) n.hidden = false;
   });
+  // 代餐一下：显示类型选择器
+  document.querySelectorAll('.treats-only').forEach((n) => (n.hidden = !treats || kind !== 'upload'));
   if (kind === 'upload' && !target) {
     if (spicy) {
       $('summaryLabel').innerHTML = '配字 <span class="opt">选填</span>';
       $('summary').placeholder = '想说点什么就写，不写也行';
+      $('imagesLabel').innerHTML = '上传图片 <em>必填</em> <span class="opt">最多9张</span>';
+    } else if (treats) {
+      $('summaryLabel').innerHTML = '配字 <span class="opt">选填</span>';
+      $('summary').placeholder = '文字描述，不写也行';
       $('imagesLabel').innerHTML = '上传图片 <em>必填</em> <span class="opt">最多9张</span>';
     } else if (!isRelUpload()) {
       $('summaryLabel').innerHTML = `${KINDS.upload.summaryLabel} <em>必填</em>`;
@@ -252,7 +259,7 @@ function updateFw() {
     }
   }
   const photoMode = isRelUpload() && relMode === 'photo';
-  $('summary').required = !spicy && !photoMode;
+  $('summary').required = !spicy && !treats && !photoMode;
   // 合照：不要视频链接和标签
   if (photoMode) document.querySelectorAll('.not-photo').forEach((n) => { n.hidden = true; });
 }
@@ -266,6 +273,18 @@ FW_TYPES.forEach((t) => {
   input.value = t;
   label.append(input, document.createTextNode(t));
   $('fwTypePicker').append(label);
+});
+
+const TREATS_TYPES = ['文字代餐', '图片代餐'];
+TREATS_TYPES.forEach((t) => {
+  const label = document.createElement('label');
+  label.className = 'tag-chip';
+  const input = document.createElement('input');
+  input.type = 'radio';
+  input.name = 'treatsType';
+  input.value = t;
+  label.append(input, document.createTextNode(t));
+  $('treatsTypePicker').append(label);
 });
 
 $('fwPlatform').addEventListener('change', (e) => {
@@ -672,8 +691,12 @@ form.addEventListener('submit', async (e) => {
   if (relMoment && !personId) return showMsg(relPhoto ? '请选一下是谁和C罗的合照' : '请选一下是谁和他之间的事', 'error');
   if (relPhoto && !picked.length) return showMsg('合照至少要传一张图', 'error');
   const spicyUpload = kind === 'upload' && section === 'spicy';
+  const treatsUpload = kind === 'upload' && section === 'treats';
   if (spicyUpload && !picked.length) return showMsg('🦌管素材要传至少一张图', 'error');
-  if (!summary && !spicyUpload && !relPhoto) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
+  if (treatsUpload && !picked.length) return showMsg('代餐一下要传至少一张图', 'error');
+  const treatsType = (form.querySelector('input[name="treatsType"]:checked') || {}).value || '';
+  if (treatsUpload && !treatsType) return showMsg('请选一下代餐类型', 'error');
+  if (!summary && !spicyUpload && !treatsUpload && !relPhoto) return showMsg(relPerson ? '请填写名字' : '请填写' + KINDS[kind].summaryLabel, 'error');
   if (target && kind !== 'upload' && !$('detail').value.trim()) {
     return showMsg(kind === 'correction' ? '请写一下正确的应该是什么' : '请写一下想补充的内容', 'error');
   }
@@ -729,6 +752,7 @@ form.addEventListener('submit', async (e) => {
       });
     }
     if (spicyUpload) Object.assign(row, { summary: summary || '🦌', detail: null, event_date: null, source: null, video_url: null, tags: [] });
+    if (treatsUpload) Object.assign(row, { summary: summary || '代餐', detail: null, event_date: null, source: null, video_url: null, tags: [treatsType] });
     const { error } = await supabase.from('submissions').insert(row);
     if (error) throw new Error(error.message);
     const who = relMoment ? (people || []).find((p) => p.id === personId) : null;
